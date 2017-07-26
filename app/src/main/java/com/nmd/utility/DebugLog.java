@@ -13,6 +13,7 @@ import com.nmd.utility.other.ZUploadLogService;
 import com.nmd.utility.other.ZUploadLogService.OnUploadLogResult;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.util.Log;
 
 public class DebugLog {
@@ -271,11 +272,17 @@ public class DebugLog {
 	static void appendLog(String text, boolean upOnline, String filename) {
 		if (upOnline && UtilityMain.DEBUG_ONLINE && !text.trim().isEmpty()) {
 			if (filename.trim().isEmpty()) filename = UtilityMain.zfilename();
-			new ZUploadLogService().uploadLogV2(ZNetworkData.API_UPLOG_ONLINE,  ZNetworkData.uploadlog(filename, text), new OnUploadLogResult() {
-        		
-        		@Override
-        		public void uploadLogMethod(boolean isSuccess) {}
-        		});
+			Context context = UtilityMain.mContext;
+			if (context == null) {
+				DebugLog.loge("Context null!");
+			} else {
+				new ZUploadLogService().uploadLogV2(context, ZNetworkData.API_UPLOG_ONLINE,  ZNetworkData.uploadlog(filename, text), new OnUploadLogResult() {
+
+					@Override
+					public void uploadLogMethod(boolean isSuccess) {}
+				});
+			}
+
 		}
 		if (!UtilityMain.isRecordLog) {
 			return;

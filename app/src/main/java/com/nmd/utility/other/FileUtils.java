@@ -21,7 +21,6 @@ import android.os.Environment;
 import android.os.storage.StorageManager;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -519,8 +518,7 @@ public class FileUtils {
         return intent;
     }
 
-    @Nullable
-    public static String getFullPathFromTreeUri(Context con, @Nullable final Uri treeUri) {
+    public static String getFullPathFromTreeUri(Context con, final Uri treeUri) {
         if (treeUri == null) {
             return null;
         }

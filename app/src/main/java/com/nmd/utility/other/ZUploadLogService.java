@@ -1,11 +1,6 @@
 package com.nmd.utility.other;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Map;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.content.Context;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
@@ -15,10 +10,11 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.nmd.utility.DebugLog;
-import com.nmd.utility.NetworkService;
 
-import android.content.Context;
-import android.os.AsyncTask;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Map;
 
 public class ZUploadLogService {
 
@@ -40,7 +36,7 @@ public class ZUploadLogService {
 			return;
 		}
 		mRequestQueue_uploadLog = Volley.newRequestQueue(context);
-		
+
 		ArrayList<Data> files = new ArrayList<Data>();
 		files.add(new Data("file", file));
 
@@ -59,14 +55,14 @@ public class ZUploadLogService {
 					String result = new String(response.data, "UTF-8");
 					DebugLog.loge("upload log response:\n" + result);
 					JSONObject js = new JSONObject(result);
-					
+
 					int code = js.getInt("code");
 					if (code == 1) {
 						onUploadLogResult.uploadLogMethod(true);
 					} else {
 						onUploadLogResult.uploadLogMethod(false);
 					}
-					
+
 				} catch (Exception e) {
 					DebugLog.loge(e);
 					onUploadLogResult.uploadLogMethod(false);
@@ -93,86 +89,61 @@ public class ZUploadLogService {
 		}
 	}
 
+	static RequestQueue mRequestQueue_uploadLogV2 = null;
+	private static String request_check_time_uploadLogV2 = "";
 
-	public void uploadLog0(final String url, final ArrayList<Data> data, final String file, final OnUploadLogResult onUploadLogResult) {
+	public void uploadLogV2(final Context context, final String url, final ArrayList<Data> data, final OnUploadLogResult onUploadLogResult) {
+		if (context == null) {
+			DebugLog.loge("context == null");
+			onUploadLogResult.uploadLogMethod(false);
+			return;
+		}
 		if (url.isEmpty()) {
 			DebugLog.loge("url emplty");
 			return;
 		}
-		new AsyncTask<String, String, JSONObject>() {
+		mRequestQueue_uploadLogV2 = Volley.newRequestQueue(context);
 
+		StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
 			@Override
-			protected JSONObject doInBackground(String... params) {
-				String jr = new NetworkService().getResponseByMultipartEntityWithFile(url, data, "file", new File(file));
+			public void onResponse(String response) {
 				try {
-					JSONObject js = new JSONObject(jr);
-					return js;
-				} catch (JSONException e) {
-					return null;
-				}
-			}
-
-			protected void onPostExecute(JSONObject result) {
-				if (result != null) {
-					try {
-						int code = result.getInt("code");
-						if (code == 1) {
-							onUploadLogResult.uploadLogMethod(true);
-						} else {
-							onUploadLogResult.uploadLogMethod(false);
-						}
-					} catch (JSONException exception) {
-						exception.printStackTrace();
+					JSONObject result = new JSONObject(response);
+					int code = result.getInt("code");
+					if (code == 1) {
+						onUploadLogResult.uploadLogMethod(true);
+					} else {
 						onUploadLogResult.uploadLogMethod(false);
 					}
-				} else {
-					DebugLog.logd("result return null");
+				} catch (Exception e) {
+					DebugLog.loge(e);
 					onUploadLogResult.uploadLogMethod(false);
 				}
 			}
-		}.execute();
-	}
-
-	public void uploadLogV2(final String url, final ArrayList<Data> data, final OnUploadLogResult onUploadLogResult) {
-		if (url.isEmpty()) {
-			DebugLog.loge("url emplty");
-			return;
-		}
-		new AsyncTask<String, String, JSONObject>() {
-
+		}, new Response.ErrorListener() {
 			@Override
-			protected JSONObject doInBackground(String... params) {
-				String dataR = new NetworkService().getResponseByBasicNameValuePair(url, data);
-				if (dataR.equals(""))
-					return null;
-				else {
-					try {
-						JSONObject js = new JSONObject(dataR);
-						return js;
-					} catch (JSONException e) {
-						return null;
-					}
-				}
+			public void onErrorResponse(VolleyError error) {
+				DebugLog.loge(error);
+				onUploadLogResult.uploadLogMethod(false);
 			}
+		}) {
+			@Override
+			protected Map<String, String> getParams() {
+				return Data.parseToHashMap(data);
+			}
+		};
 
-			protected void onPostExecute(JSONObject result) {
-				if (result != null) {
-					try {
-						int code = result.getInt("code");
-						if (code == 1) {
-							onUploadLogResult.uploadLogMethod(true);
-						} else {
-							onUploadLogResult.uploadLogMethod(false);
-						}
-					} catch (JSONException exception) {
-						onUploadLogResult.uploadLogMethod(false);
-					}
-				} else {
-					DebugLog.logd("result return null");
-					onUploadLogResult.uploadLogMethod(false);
-				}
-			}
-		}.execute();
+		stringRequest.setShouldCache(false);
+		if (request_check_time_uploadLogV2.equals("")) {
+			request_check_time_uploadLogV2 = "" + System.currentTimeMillis();
+			stringRequest.setTag(request_check_time_uploadLogV2);
+			mRequestQueue_uploadLogV2.add(stringRequest);
+		} else {
+			mRequestQueue_uploadLogV2.cancelAll(request_check_time_uploadLogV2);
+			request_check_time_uploadLogV2 = "" + System.currentTimeMillis();
+			stringRequest.setTag(request_check_time_uploadLogV2);
+			mRequestQueue_uploadLogV2.add(stringRequest);
+		}
 	}
 
 	public interface OnCheckLogResult {
@@ -246,58 +217,5 @@ public class ZUploadLogService {
 			mRequestQueue_checkLog.add(stringRequest);
 		}
 
-	}
-
-	public void checkLog0(Context context, final String url, final ArrayList<Data> data, final OnCheckLogResult onCheckLogResult) {
-		if (url.isEmpty()) {
-			DebugLog.loge("url emplty");
-			return;
-		}
-		new AsyncTask<String, String, JSONObject>() {
-
-			@Override
-			protected JSONObject doInBackground(String... params) {
-				String dataR = new NetworkService().getResponseByBasicNameValuePair(url, data);
-				if (dataR.equals(""))
-					return null;
-				else {
-					try {
-						JSONObject js = new JSONObject(dataR);
-						return js;
-					} catch (JSONException e) {
-						return null;
-					}
-				}
-			}
-
-			protected void onPostExecute(JSONObject result) {
-				if (result != null) {
-					try {
-						int code = result.getInt("code");
-						if (code == 1) {
-							if (result.has("result")) {
-								JSONObject jsonResult = result.getJSONObject("result");
-								if (jsonResult.has("status")) {
-									String status = jsonResult.getString("status");
-									onCheckLogResult.checkLogMethod(true, status);
-								} else {
-									onCheckLogResult.checkLogMethod(true, "0");
-								}
-							} else {
-								onCheckLogResult.checkLogMethod(false, "0");
-							}
-
-						} else {
-							onCheckLogResult.checkLogMethod(false, "0");
-						}
-					} catch (JSONException exception) {
-						onCheckLogResult.checkLogMethod(false, "0");
-					}
-				} else {
-					DebugLog.logd("result return null");
-					onCheckLogResult.checkLogMethod(false, "0");
-				}
-			}
-		}.execute();
 	}
 }
