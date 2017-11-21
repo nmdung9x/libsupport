@@ -1,47 +1,5 @@
 package com.nmd.utility;
 
-import static com.nineoldandroids.view.ViewPropertyAnimator.animate;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.security.Key;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.Normalizer;
-import java.text.Normalizer.Form;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.regex.Pattern;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.nmd.utility.other.Data;
-import com.nmd.utility.other.ResizeHeightAnimation;
-import com.nmd.utility.other.ResizeWidthAnimation;
-
-import Decoder.BASE64Decoder;
-import Decoder.BASE64Encoder;
 import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -93,6 +51,49 @@ import android.widget.ScrollView;
 import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.nmd.utility.other.Data;
+import com.nmd.utility.other.ResizeHeightAnimation;
+import com.nmd.utility.other.ResizeWidthAnimation;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.regex.Pattern;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+
+import Decoder.BASE64Decoder;
+import Decoder.BASE64Encoder;
+
+import static com.nineoldandroids.view.ViewPropertyAnimator.animate;
 
 @SuppressLint({ "SimpleDateFormat", "InlinedApi", "DefaultLocale" })
 @SuppressWarnings("unused")
@@ -374,7 +375,7 @@ public class UtilLibs {
 	}
 
 	static Toast setToastMessageCenter(Toast toast) {
-		TextView v = (TextView) toast.getView().findViewById(android.R.id.message);
+		TextView v = toast.getView().findViewById(android.R.id.message);
 
 		if (v != null) {
 			v.setGravity(Gravity.CENTER);
@@ -607,10 +608,7 @@ public class UtilLibs {
 	public static boolean validateEmail(String email) {
 		Pattern pattern = Pattern.compile("[a-zA-Z0-9._-]+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2}[A-Za-z]*$+");
 		Pattern pattern2 = Pattern.compile("[a-zA-Z0-9._-]+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2}[A-Za-z]*$+\\.+[a-z]+");
-		if (pattern.matcher(email).matches() || pattern2.matcher(email).matches()) {
-			return true;
-		}
-		return false;
+		return pattern.matcher(email).matches() || pattern2.matcher(email).matches();
 	}
 
 	/**
@@ -1333,11 +1331,7 @@ public class UtilLibs {
 	public static boolean handleHeadphonesState(Context context) {
 		AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
-		if (am.isWiredHeadsetOn()) {
-			return true;
-		} else {
-			return false;
-		}
+		return am.isWiredHeadsetOn();
 	}
 
 	/**
@@ -1353,11 +1347,7 @@ public class UtilLibs {
 	public static boolean isNetworkConnect(Context context) {
 		final ConnectivityManager conMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 		final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
-		if (activeNetwork != null && activeNetwork.isConnected()) {
-			return true;
-		} else {
-			return false;
-		}
+		return activeNetwork != null && activeNetwork.isConnected();
 	}
 	
 	public static boolean isNetworkConnect() {
@@ -1422,19 +1412,9 @@ public class UtilLibs {
 	 * @return (String) result.
 	 */
 	public static String getStringInJsonObj(JSONObject jsonObject, String key) {
-		if (jsonObject.has(key)) {
-			try {
-				String temp = String.valueOf(jsonObject.get(key));
-				if (temp.equalsIgnoreCase("null")) {
-					return "";
-				}
-				return temp;
-			} catch (JSONException e) {
-				return "";
-			}
-		} else {
-			return "";
-		}
+		Object result = getValueInJsonObj(jsonObject, key);
+		if (result != null) return String.valueOf(result);
+		return "";
 	}
 
 	public static ArrayList<Object> getObjectInJsonArray(JSONArray jsonArray) {
@@ -1445,7 +1425,7 @@ public class UtilLibs {
 				try {
 					arrayList.add(jsonArray.get(i));
 				} catch (JSONException e) {
-					arrayList.add((Object) "");
+					arrayList.add("");
 				}
 			}
 		}
@@ -2292,10 +2272,7 @@ public class UtilLibs {
 
 	public static boolean checkStoreData(Context context, Object key, String value, String split) {
 		String current = SharedPreference.get(context, String.valueOf(key), "");
-		if (current.contains(value)) {
-			return true;
-		}
-		return false;
+		return current.contains(value);
 	}
 
 	public static void addStoreData(Context context, Object key, String value) {
@@ -2432,4 +2409,21 @@ public class UtilLibs {
         bitmapOrg.recycle();
         return result;
     }
+
+	public static String encodeImageTobase64(Bitmap image)
+	{
+		if (image == null) return "";
+		Bitmap immagex = image;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		immagex.compress(Bitmap.CompressFormat.PNG, 100, baos);
+		byte[] b = baos.toByteArray();
+		return Base64.encodeToString(b,Base64.DEFAULT);
+	}
+
+	public static Bitmap decodeBase64ToImage(String input)
+	{
+		if (input.trim().isEmpty()) return null;
+		byte[] decodedByte = Base64.decode(input, 0);
+		return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+	}
 }
