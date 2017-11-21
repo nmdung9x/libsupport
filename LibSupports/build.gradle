@@ -1,11 +1,13 @@
 apply plugin: 'com.android.library'
+apply from: 'maven-push.gradle'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.1"
+    buildToolsVersion "26.0.3"
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 26
+        resourcePrefix "nmd9x__"
 
         versionCode 2
         versionName "2.0"
@@ -20,4 +22,6 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.nineoldandroids:library:2.4.0'
+    implementation 'com.android.volley:volley:1.0.0'
 }
