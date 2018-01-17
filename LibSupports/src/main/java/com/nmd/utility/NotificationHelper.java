@@ -22,9 +22,9 @@ public class NotificationHelper extends ContextWrapper {
     public static final String PRIMARY_CHANNEL = "default";
     public static final String CHANNEL_DEFAULT = "Primary Channel";
 
-    String sound = "";
-    boolean isVibrate = false;
-    boolean isNotificationLight = false;
+    String s = ""; //Sound name
+    boolean v = false; //isVibrate
+    boolean l = false; //NotificationLight
 
     /**
      * Registers notification channels, which can be used later by individual notifications.
@@ -33,9 +33,29 @@ public class NotificationHelper extends ContextWrapper {
      */
     public NotificationHelper(Context ctx) {
         super(ctx);
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(PRIMARY_CHANNEL, CHANNEL_DEFAULT, NotificationManager.IMPORTANCE_DEFAULT); //IMPORTANCE_HIGH
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public NotificationChannel createNotificationChannel() {
+        return createNotificationChannel(PRIMARY_CHANNEL, CHANNEL_DEFAULT, true, true, "");
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public NotificationChannel createNotificationChannel(String channel_id, String channel_name, boolean isVibrate, boolean isNotificationLight, String sound) {
+        return createNotificationChannel(PRIMARY_CHANNEL, CHANNEL_DEFAULT, true, true, "default", NotificationManager.IMPORTANCE_DEFAULT, Notification.VISIBILITY_PUBLIC);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public NotificationChannel createNotificationChannel(String channel_id, String channel_name, boolean isVibrate, boolean isNotificationLight, String sound, int importance, int lockscreenVisibility) {
+        if (channel_name.isEmpty()) {
+            channel_name = CHANNEL_DEFAULT;
+            if (channel_id.isEmpty()) channel_id = PRIMARY_CHANNEL;
+        } else {
+            if (channel_id.isEmpty()) channel_id = channel_name.replaceAll(" ", "_");
+        }
+        NotificationChannel channel = getManager().getNotificationChannel(channel_id);
+        if (channel == null) {
+            channel = new NotificationChannel(channel_id, channel_name, importance); //NotificationManager.IMPORTANCE_DEFAULT or IMPORTANCE_HIGH
             channel.enableVibration(isVibrate);
             if (isNotificationLight) {
                 channel.enableLights(isNotificationLight);
@@ -43,11 +63,11 @@ public class NotificationHelper extends ContextWrapper {
             if (!(sound.equals("") && sound.equals("default"))) {
                 channel.setSound(Uri.parse(sound), null);
             }
-            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC); //VISIBILITY_PRIVATE
+            channel.setLockscreenVisibility(lockscreenVisibility); //Notification.VISIBILITY_PUBLIC or VISIBILITY_PRIVATE
             getManager().createNotificationChannel(channel);
         }
+        return channel;
     }
-
     /**
      * Get a notification of type 1
      *
@@ -59,8 +79,8 @@ public class NotificationHelper extends ContextWrapper {
      * @return the builder as it keeps a reference to the notification (since API 24)
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
-    Notification.Builder getNotificationO(String title, String body, String full_body, Object smallIcon, PendingIntent intent) {
-        Notification.Builder mBuilder = new Notification.Builder(getApplicationContext(), PRIMARY_CHANNEL);
+    public Notification.Builder getNotificationO(NotificationChannel channel, String title, String body, String full_body, Object smallIcon, PendingIntent intent) {
+        Notification.Builder mBuilder = new Notification.Builder(getApplicationContext(), channel.getId());
         if (!title.trim().isEmpty()) mBuilder.setContentTitle(title);
         if (!body.trim().isEmpty()) mBuilder.setContentText(body);
         if (!full_body.trim().isEmpty()) mBuilder.setStyle(new Notification.BigTextStyle().bigText(full_body));
@@ -79,34 +99,42 @@ public class NotificationHelper extends ContextWrapper {
     }
 
     public Notification.Builder getNotification(String title, String body, String full_body, Object smallIcon, PendingIntent intent) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            return getNotificationO(title, body, full_body, smallIcon, intent);
-        }
+        return getNotification(title, body, full_body, smallIcon, intent, true, true, "default", true, Notification.PRIORITY_DEFAULT);
+    }
 
-        Notification.Builder mBuilder = new Notification.Builder(getApplicationContext());
-        if (!title.trim().isEmpty()) mBuilder.setContentTitle(title);
-        if (!body.trim().isEmpty()) mBuilder.setContentText(body);
-        if (!full_body.trim().isEmpty()) {
-            if (Build.VERSION.SDK_INT >= 24) {
-                mBuilder.setStyle(new Notification.BigTextStyle().bigText(full_body));
+    public Notification.Builder getNotification(String title, String body, String full_body, Object smallIcon, PendingIntent intent,
+                                                boolean isVibrate, boolean isNotificationLight, String sound, boolean autoCancel, int priority) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return getNotificationO(createNotificationChannel(), title, body, full_body, smallIcon, intent);
+        } else {
+            s = sound;
+            v = isVibrate;
+            l = isNotificationLight;
+            Notification.Builder mBuilder = new Notification.Builder(getApplicationContext());
+            if (!title.trim().isEmpty()) mBuilder.setContentTitle(title);
+            if (!body.trim().isEmpty()) mBuilder.setContentText(body);
+            if (!full_body.trim().isEmpty()) {
+                if (Build.VERSION.SDK_INT >= 24) {
+                    mBuilder.setStyle(new Notification.BigTextStyle().bigText(full_body));
 //            } else {
 //                mBuilder.setContentTitle(getString(R.string.app_name));
+                }
             }
-        }
-        if (smallIcon != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && smallIcon instanceof Icon) {
-                mBuilder.setSmallIcon((Icon) smallIcon);
-            } else {
-                mBuilder.setSmallIcon((int) smallIcon);
-            }
+            if (smallIcon != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && smallIcon instanceof Icon) {
+                    mBuilder.setSmallIcon((Icon) smallIcon);
+                } else {
+                    mBuilder.setSmallIcon((int) smallIcon);
+                }
 //        } else {
 //            mBuilder.setSmallIcon(Build.VERSION.SDK_INT >= 24 ? R.mipmap.ic_launcher_round : R.mipmap.ic_launcher);
-        }
+            }
 
-        mBuilder.setAutoCancel(false);
-        mBuilder.setPriority(Notification.PRIORITY_MAX);
-        if (intent != null) mBuilder.setContentIntent(intent);
-        return mBuilder;
+            mBuilder.setAutoCancel(autoCancel);
+            mBuilder.setPriority(priority);
+            if (intent != null) mBuilder.setContentIntent(intent);
+            return mBuilder;
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -123,18 +151,6 @@ public class NotificationHelper extends ContextWrapper {
         if (smallIcon != -1) mBuilder.setSmallIcon(smallIcon);
         mBuilder.setLargeIcon(iconLarge);
         return mBuilder;
-    }
-
-    public void setSound(String s) {
-        sound = s;
-    }
-
-    public void setVibrate(boolean b) {
-        isVibrate = b;
-    }
-
-    public void setNotificationLight(boolean b) {
-        isNotificationLight = b;
     }
 
     /**
@@ -155,16 +171,16 @@ public class NotificationHelper extends ContextWrapper {
 
     public void notify(int id, Notification notification) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            if (sound.equals("default")){
+            if (s.equals("default")){
                 notification.defaults |= Notification.DEFAULT_SOUND;
             } else {
 //			e.g: "android.resource://com.niw.lounge/" + R.raw.entersound
-                notification.sound = Uri.parse(sound);
+                notification.sound = Uri.parse(s);
             }
-            if (isVibrate){
+            if (v){
                 notification.defaults |= Notification.DEFAULT_VIBRATE;
             }
-            if (isNotificationLight) {
+            if (l) {
                 notification.defaults |= Notification.DEFAULT_LIGHTS;
                 notification.flags |= Notification.FLAG_SHOW_LIGHTS;
             }
@@ -176,7 +192,7 @@ public class NotificationHelper extends ContextWrapper {
         getManager().cancel(id);
     }
 
-    public void removeAll(int id) {
+    public void removeAll() {
         getManager().cancelAll();
     }
 

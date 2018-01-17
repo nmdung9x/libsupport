@@ -41,6 +41,10 @@ public class NetworkService extends ContextWrapper {
         void result(String response);
     }
 
+    public void cancelRequest(String tagRequest) {
+        mRequestQueue.cancelAll(tagRequest);
+    }
+
     public void get(final String url, final HashMap<String, String> headers, final OnGetResult callback) {
         get(url, headers, "", false, callback);
     }
