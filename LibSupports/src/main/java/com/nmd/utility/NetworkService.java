@@ -40,7 +40,7 @@ public class NetworkService extends ContextWrapper {
 
     public interface OnGetResult {
         void result(String response);
-        void response(int code, String response);
+        void networkResponse(NetworkResponse networkResponse);
         void volleyError(VolleyError error);
         void error(Exception exception);
     }
@@ -75,26 +75,7 @@ public class NetworkService extends ContextWrapper {
 
             @Override
             protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                int statusCode = -1;
-                try {
-                    statusCode = response.statusCode;
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                String strResponse = "";
-                try {
-                    if (response != null) {
-                        strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                        DebugLog.loge(strResponse);
-                    } else {
-                        DebugLog.loge("response == null");
-                    }
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                callback.response(statusCode, strResponse);
+                callback.networkResponse(response);
                 return super.parseNetworkResponse(response);
             }
 
@@ -144,29 +125,9 @@ public class NetworkService extends ContextWrapper {
                 callback.volleyError(error);
             }
         }) {
-
             @Override
             protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                int statusCode = -1;
-                try {
-                    statusCode = response.statusCode;
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                String strResponse = "";
-                try {
-                    if (response != null) {
-                        strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                        DebugLog.loge(strResponse);
-                    } else {
-                        DebugLog.loge("response == null");
-                    }
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                callback.response(statusCode, strResponse);
+                callback.networkResponse(response);
                 return super.parseNetworkResponse(response);
             }
 
@@ -225,26 +186,7 @@ public class NetworkService extends ContextWrapper {
         }) {
             @Override
             protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                int statusCode = -1;
-                try {
-                    statusCode = response.statusCode;
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                String strResponse = "";
-                try {
-                    if (response != null) {
-                        strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                        DebugLog.loge(strResponse);
-                    } else {
-                        DebugLog.loge("response == null");
-                    }
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                callback.response(statusCode, strResponse);
+                callback.networkResponse(response);
                 return super.parseNetworkResponse(response);
             }
 
@@ -296,13 +238,6 @@ public class NetworkService extends ContextWrapper {
         MultipartRequest multipartRequest = new MultipartRequest(url, null, mimeType, multipartBody, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
-                int statusCode = -1;
-                try {
-                    statusCode = response.statusCode;
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
                 String strResponse = "";
                 try {
                     if (response != null) {
@@ -315,7 +250,8 @@ public class NetworkService extends ContextWrapper {
                     DebugLog.loge(e);
                     callback.error(e);
                 }
-                callback.response(statusCode, strResponse);
+                callback.networkResponse(response);
+                callback.result(strResponse);
             }
         }, new Response.ErrorListener() {
             @Override
