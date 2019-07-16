@@ -311,6 +311,31 @@ public class UtilityMain {
 			uploadLog();
 	}
 
+	public static void checkLog(long length) {
+		if (file1.exists()) {
+			DebugLog.loge("file log:" + String.valueOf(file1.length() / 1000000) + "MB");
+			if (file1.length() > length) {
+				DebugLog.loge("Delete file log!");
+				try {
+					file1.delete();
+				} catch (Exception e) {
+					DebugLog.loge(e);
+				}
+			}
+		}
+		if (file2.exists()) {
+			DebugLog.loge("file error:" + String.valueOf(file2.length() / 1000000) + "MB");
+			if (file2.length() > length) {
+				DebugLog.loge("Delete file error!");
+				try {
+					file2.delete();
+				} catch (Exception e) {
+					DebugLog.loge(e);
+				}
+			}
+		}
+	}
+
 	/**
 	 * @param url_check_log
 	 *            : http://quanlyhangxe.com/shorashim/log/index.php/api/getlog

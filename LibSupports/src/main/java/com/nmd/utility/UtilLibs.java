@@ -1,6 +1,7 @@
 package com.nmd.utility;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentResolver;
@@ -15,9 +16,11 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.icu.text.DecimalFormat;
 import android.media.AudioManager;
 import android.media.ExifInterface;
 import android.media.MediaMetadataRetriever;
@@ -30,7 +33,10 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.provider.Telephony;
 import android.text.Html;
+import android.text.Spannable;
 import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -40,6 +46,7 @@ import android.view.View;
 import android.view.View.OnFocusChangeListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -77,13 +84,17 @@ import java.net.URL;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 
@@ -147,6 +158,18 @@ public class UtilLibs {
 		}
 		SimpleDateFormat sdf = new SimpleDateFormat(format);
 		return sdf.format(value);
+	}
+
+	public static long parseTimeToMilis(String value, String dateFormat) {
+		try {
+			DateFormat format = new SimpleDateFormat(dateFormat, Locale.US);
+			Date date = format.parse(value);
+			return date.getTime();
+		} catch (Exception e) {
+			DebugLog.loge(e);
+		}
+
+		return 0;
 	}
 
 	public static int checkDayOfWeek(long dateTimeInMiliseconds) {
@@ -495,9 +518,46 @@ public class UtilLibs {
 		}
 	}
 
-	public static void showKeybroad(Context context, EditText editText) {
+	public static void showKeybroadEditText(Context context, EditText editText) {
 		InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
 		imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+	}
+
+	public static void hideKeyboard(Activity activity) {
+		View view = activity.findViewById(android.R.id.content);
+		if (view != null) {
+			try {
+				InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+				imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+			} catch (Exception e) {
+				DebugLog.loge(e);
+			}
+
+		}
+	}
+
+	public static void showKeyboard(Context context) {
+		showKeyboard((Activity) context);
+	}
+
+	public static void showKeyboard(Activity activity) {
+		InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+		inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+	}
+
+	public static void showKeyboard(Context context, View viewForcus) {
+		showKeyboard((Activity) context, viewForcus, false);
+	}
+
+	public static void showKeyboard(Context context, View viewForcus, boolean requestFocus) {
+		showKeyboard((Activity) context, viewForcus, requestFocus);
+	}
+
+	public static void showKeyboard(Activity activity, View viewForcus, boolean requestFocus) {
+		InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+		inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+
+		if (requestFocus) viewForcus.requestFocus();
 	}
 
 	/**
@@ -1391,6 +1451,9 @@ public class UtilLibs {
 	 * @return (Object) result.
 	 */
 	public static Object getValueInJsonObj(JSONObject jsonObject, String key) {
+		if (jsonObject == null) return null;
+		if (key == null) return null;
+		if (key.trim().isEmpty()) return null;
 		if (jsonObject.has(key)) {
 			try {
 				return jsonObject.get(key);
@@ -1412,6 +1475,9 @@ public class UtilLibs {
 	 * @return (String) result.
 	 */
 	public static String getStringInJsonObj(JSONObject jsonObject, String key) {
+		if (jsonObject == null) return "";
+		if (key == null) return "";
+		if (key.trim().isEmpty()) return "";
 		Object result = getValueInJsonObj(jsonObject, key);
 		if (result != null) return String.valueOf(result);
 		return "";
@@ -1517,6 +1583,103 @@ public class UtilLibs {
         return result;
     }
 
+	public static JSONObject getJSONObjectFromJSONObject(JSONObject obj, Object key) {
+		if (obj == null) return null;
+		if (key == null) return null;
+		try {
+			return obj.has(String.valueOf(key)) ? obj.getJSONObject(String.valueOf(key)) : null;
+		} catch (Exception e) {
+			DebugLog.loge(e);
+		}
+		return null;
+	}
+
+	public static JSONArray getJSONArrayFromJSONObject(JSONObject obj, Object key) {
+		if (obj == null) return new JSONArray();
+		if (key == null) return null;
+		try {
+			return obj.has(String.valueOf(key)) ? obj.getJSONArray(String.valueOf(key)) : new JSONArray();
+		} catch (Exception e) {
+			DebugLog.logi(e);
+		}
+		return new JSONArray();
+	}
+
+	public static ArrayList<JSONObject> parseJSONArrayToArrayListJSON(JSONArray jsonArray) {
+		if (jsonArray == null) return new ArrayList<>();
+		try {
+			if (jsonArray.length() > 0) {
+				ArrayList<JSONObject> results = new ArrayList<>();
+				for (int i = 0; i < jsonArray.length(); i++) {
+					results.add(jsonArray.getJSONObject(i));
+				}
+				return results;
+			}
+		} catch (Exception e) {
+			DebugLog.loge(e);
+		}
+		return new ArrayList<>();
+	}
+
+	public static String formatCurrency(String value, String pattern) {
+		if (Build.VERSION.SDK_INT >= 24) {
+			DecimalFormat df = new DecimalFormat(pattern); //"#,###,###,###,###"
+			return formatCurrency(value, df);
+		} else {
+			return getDecimalFormattedString(value);
+		}
+	}
+
+	public static String formatCurrency(String value, DecimalFormat df) {
+		if (Build.VERSION.SDK_INT >= 24) {
+			String result = "0";
+			if (value.trim().isEmpty()) return result;
+			try {
+				result = df.format(Double.valueOf(value));
+			} catch (Exception e) {
+				DebugLog.loge(e);
+			}
+			return result;
+		} else {
+			return getDecimalFormattedString(value);
+		}
+	}
+
+	static String getDecimalFormattedString(String value) {
+		if (value.contains(".")) {
+			String[] tmp = value.split("\\.");
+			if (tmp.length > 0) {
+				value = tmp[0];
+			}
+		}
+		StringTokenizer lst = new StringTokenizer(value, ".");
+		String str1 = value;
+		String str2 = "";
+		if (lst.countTokens() > 1) {
+			str1 = lst.nextToken();
+			str2 = lst.nextToken();
+		}
+		String str3 = "";
+		int i = 0;
+		int j = -1 + str1.length();
+		if (str1.charAt(-1 + str1.length()) == '.') {
+			j--;
+			str3 = ".";
+		}
+		for (int k = j; ; k--) {
+			if (k < 0) {
+				if (str2.length() > 0)
+					str3 = str3 + "." + str2;
+				return str3;
+			}
+			if (i == 3) {
+				str3 = "." + str3; //,
+				i = 0;
+			}
+			str3 = str1.charAt(k) + str3;
+			i++;
+		}
+	}
 
 	public static String getDeviceName() {
 		String manufacturer = Build.MANUFACTURER;
@@ -2013,6 +2176,27 @@ public class UtilLibs {
 		h1.postDelayed(r1, duration1);
 	}
 
+	public static void showViewFadeAnimation(View viewShow, final View viewHide, long duration) {
+		viewShow.setVisibility(View.VISIBLE);
+		viewShow.setAlpha(0);
+		viewShow.animate()
+				.alpha(1)
+				.setDuration(duration)
+				.setInterpolator(new DecelerateInterpolator());
+		if (viewHide != null) {
+			viewHide.animate()
+					.alpha(0)
+					.setDuration(300)
+					.setInterpolator(new DecelerateInterpolator())
+					.withEndAction(new Runnable() {
+						@Override
+						public void run() {
+							viewHide.setVisibility(View.GONE);
+						}
+					});
+		}
+	}
+
 	/**
 	 * Get Value From Data.
 	 *
@@ -2425,5 +2609,84 @@ public class UtilLibs {
 		if (input.trim().isEmpty()) return null;
 		byte[] decodedByte = Base64.decode(input, 0);
 		return BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.length);
+	}
+
+	public static void colorText(TextView textView, String textSelect, String color) {
+		styleText(textView, textSelect, color, false);
+	}
+
+	public static void boldText(TextView textView, String textSelect) {
+		styleText(textView, textSelect, "", true);
+	}
+
+	public static void styleText(TextView textView, String textSelect, String color, boolean isBold) {
+		if (!color.isEmpty() && !color.contains("#")) {
+			color = "#"+color;
+		}
+		String origin = textView.getText().toString();
+		try {
+			textView.setText(origin, TextView.BufferType.SPANNABLE);
+			Spannable s = (Spannable) textView.getText();
+			int start = textView.getText().toString().indexOf(textSelect);
+			int end = start + textSelect.length();
+			if (isBold) s.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			if (!color.isEmpty()) s.setSpan(new ForegroundColorSpan(Color.parseColor(color)), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+//            if (textSize > 0) s.setSpan(new AbsoluteSizeSpan(textSize), start, end, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+		} catch (Exception e) {
+			DebugLog.loge(e);
+			textView.setText(origin);
+		}
+	}
+
+	public static JSONObject parseQueryToJson(String query) {
+		JSONObject object = new JSONObject();
+		try {
+			String tmp = query.trim().replaceAll("\\?", "");
+			if (!tmp.isEmpty()) {
+				if (tmp.contains("&")) {
+					ArrayList<String> arrayList = UtilLibs.splitComme2(tmp, "&");
+					if (arrayList.size() > 0) {
+						for (String item : arrayList) {
+							if (item.contains("=")) {
+								String[] arr = UtilLibs.splitComme(item, "=");
+								if (arr.length == 2) {
+									object.put(arr[0], arr[1]);
+								}
+							}
+						}
+					}
+				} else {
+					if (tmp.contains("=")) {
+						String[] arr = UtilLibs.splitComme(tmp, "=");
+						if (arr.length == 2) {
+							object.put(arr[0], arr[1]);
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			DebugLog.loge(e);
+		}
+		return object;
+	}
+
+	public String parseJsonToQuery(JSONObject jsonObject) {
+		StringBuilder result = new StringBuilder();
+		try {
+			Iterator<String> keys = jsonObject.keys();
+
+			while(keys.hasNext()) {
+				String key = keys.next();
+				if (!result.toString().trim().isEmpty()) {
+					result.append("&");
+				}
+				result.append(key);
+				result.append("=");
+				result.append(getStringInJsonObj(jsonObject, key));
+			}
+		} catch (Exception e) {
+			DebugLog.loge(e);
+		}
+		return result.toString();
 	}
 }

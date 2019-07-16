@@ -4,13 +4,11 @@ import android.content.Context;
 import android.content.ContextWrapper;
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.nmd.utility.other.MultipartRequest;
@@ -28,21 +26,19 @@ import java.util.Map;
  * Created by nmd9x on 10/12/17.
  */
 
-public class NetworkService extends ContextWrapper {
+public class NetworkService0 extends ContextWrapper {
     Context context = null;
     private RequestQueue mRequestQueue = null;
 
-    public NetworkService(Context ctx) {
+    public NetworkService0(Context ctx) {
         super(ctx);
         context = ctx;
+
         mRequestQueue = Volley.newRequestQueue(context);
     }
 
     public interface OnGetResult {
         void result(String response);
-        void response(int code, String response);
-        void volleyError(VolleyError error);
-        void error(Exception exception);
     }
 
     public void cancelRequest(String tagRequest) {
@@ -69,35 +65,9 @@ public class NetworkService extends ContextWrapper {
             @Override
             public void onErrorResponse(VolleyError error) {
                 DebugLog.loge(error);
-                callback.volleyError(error);
+                callback.result(error.getMessage());
             }
         }) {
-
-            @Override
-            protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                int statusCode = -1;
-                try {
-                    statusCode = response.statusCode;
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                String strResponse = "";
-                try {
-                    if (response != null) {
-                        strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                        DebugLog.loge(strResponse);
-                    } else {
-                        DebugLog.loge("response == null");
-                    }
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                callback.response(statusCode, strResponse);
-                return super.parseNetworkResponse(response);
-            }
-
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 if (headers == null) {
@@ -114,9 +84,6 @@ public class NetworkService extends ContextWrapper {
             }
         }
         if (!tagRequest.trim().isEmpty()) stringRequest.setTag(tagRequest);
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(0,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         mRequestQueue.add(stringRequest);
     }
 
@@ -125,8 +92,6 @@ public class NetworkService extends ContextWrapper {
     }
 
     public void post(String url, final String body, final HashMap<String, String> headers, String tagRequest, boolean singleRequest, final OnGetResult callback) {
-        DebugLog.logn("url:\n"+url);
-        DebugLog.logn("body:\n"+body);
         if (url.isEmpty()) {
             DebugLog.loge("url empty");
             return;
@@ -141,35 +106,9 @@ public class NetworkService extends ContextWrapper {
             @Override
             public void onErrorResponse(VolleyError error) {
                 DebugLog.loge(error);
-                callback.volleyError(error);
+                callback.result(error.getMessage());
             }
         }) {
-
-            @Override
-            protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                int statusCode = -1;
-                try {
-                    statusCode = response.statusCode;
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                String strResponse = "";
-                try {
-                    if (response != null) {
-                        strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                        DebugLog.loge(strResponse);
-                    } else {
-                        DebugLog.loge("response == null");
-                    }
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                callback.response(statusCode, strResponse);
-                return super.parseNetworkResponse(response);
-            }
-
             @Override
             public byte[] getBody() throws AuthFailureError {
                 try {
@@ -195,9 +134,6 @@ public class NetworkService extends ContextWrapper {
             if (!tagRequest.trim().isEmpty()) mRequestQueue.cancelAll(tagRequest);
         }
         if (!tagRequest.trim().isEmpty()) stringRequest.setTag(tagRequest);
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(0,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         mRequestQueue.add(stringRequest);
     }
 
@@ -220,34 +156,9 @@ public class NetworkService extends ContextWrapper {
             @Override
             public void onErrorResponse(VolleyError error) {
                 DebugLog.loge(error);
-                callback.volleyError(error);
+                callback.result(error.getMessage());
             }
         }) {
-            @Override
-            protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                int statusCode = -1;
-                try {
-                    statusCode = response.statusCode;
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                String strResponse = "";
-                try {
-                    if (response != null) {
-                        strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                        DebugLog.loge(strResponse);
-                    } else {
-                        DebugLog.loge("response == null");
-                    }
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                callback.response(statusCode, strResponse);
-                return super.parseNetworkResponse(response);
-            }
-
             @Override
             protected Map<String, String> getParams() {
                 if (params == null) {
@@ -270,9 +181,6 @@ public class NetworkService extends ContextWrapper {
             if (!tagRequest.trim().isEmpty()) mRequestQueue.cancelAll(tagRequest);
         }
         if (!tagRequest.trim().isEmpty()) stringRequest.setTag(tagRequest);
-        stringRequest.setRetryPolicy(new DefaultRetryPolicy(0,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         mRequestQueue.add(stringRequest);
     }
 
@@ -296,32 +204,19 @@ public class NetworkService extends ContextWrapper {
         MultipartRequest multipartRequest = new MultipartRequest(url, null, mimeType, multipartBody, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
-                int statusCode = -1;
                 try {
-                    statusCode = response.statusCode;
+                    String result = new String(response.data, "UTF-8");
+                    callback.result(result);
                 } catch (Exception e) {
                     DebugLog.loge(e);
-                    callback.error(e);
+                    callback.result(e.getMessage());
                 }
-                String strResponse = "";
-                try {
-                    if (response != null) {
-                        strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                        DebugLog.loge(strResponse);
-                    } else {
-                        DebugLog.loge("response == null");
-                    }
-                } catch (Exception e) {
-                    DebugLog.loge(e);
-                    callback.error(e);
-                }
-                callback.response(statusCode, strResponse);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 DebugLog.loge(error);
-                callback.volleyError(error);
+                callback.result(error.getMessage());
             }
         });
 
@@ -330,9 +225,6 @@ public class NetworkService extends ContextWrapper {
             if (!tagRequest.trim().isEmpty()) mRequestQueue.cancelAll(tagRequest);
         }
         if (!tagRequest.trim().isEmpty()) multipartRequest.setTag(tagRequest);
-        multipartRequest.setRetryPolicy(new DefaultRetryPolicy(0,
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         mRequestQueue.add(multipartRequest);
     }
 
