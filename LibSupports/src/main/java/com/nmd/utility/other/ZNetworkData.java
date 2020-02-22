@@ -6,7 +6,7 @@ import com.nmd.utility.UtilityMain;
 
 public class ZNetworkData {
 	
-	public static String HOST_NAME = "http://quanlyhangxe.com/shorashim/log/index.php/api";
+	public static String HOST_NAME = "";
 	
 	public static String API_CHECKLOG = "";
 	public static String API_UPLOG = "";
@@ -14,7 +14,7 @@ public class ZNetworkData {
 	
 	public static String API_CHECKLOG(){
 		if(!HOST_NAME.isEmpty()){
-			return HOST_NAME + "/setlogproject";
+			return HOST_NAME + "/checklog";
 		}else{
 			return API_CHECKLOG;
 		}
