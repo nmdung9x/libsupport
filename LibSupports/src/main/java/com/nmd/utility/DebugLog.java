@@ -93,7 +93,11 @@ public class DebugLog {
 				}
 				if (UtilityMain.DEBUG_I) {
 		            appendLog("Log---i " + check + message, upOnline, tag);
-		        }
+		        } else {
+					if (upOnline) {
+						appendLog("Log---i " + check + message, true, tag);
+					}
+				}
 				break;
 
 			case n:
@@ -152,7 +156,11 @@ public class DebugLog {
 				}
 				if (UtilityMain.DEBUG_I && UtilityMain.DEBUG_E_EXCEPTION) {
 		            appendLog("Log---i " + check + message, upOnline, tag);
-		        }
+				} else {
+					if (upOnline) {
+						appendLog("Log---i " + check + message, true, tag);
+					}
+				}
 				break;
 
 			case n:

@@ -104,7 +104,7 @@ public class ZUploadLogService {
 		}
 		mRequestQueue_uploadLogV2 = Volley.newRequestQueue(context);
 
-		StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+		StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
 			@Override
 			public void onResponse(String response) {
 				try {
