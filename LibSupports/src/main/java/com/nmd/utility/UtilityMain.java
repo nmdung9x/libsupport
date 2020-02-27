@@ -512,7 +512,7 @@ public class UtilityMain {
 	}
 
 	static void upFile(String filename, final File file) {
-		new ZUploadLogService().uploadLog(mContext, ZNetworkData.API_UPLOG(), ZNetworkData.uploadlog(filename), file.getPath(), new OnUploadLogResult() {
+		new ZUploadLogService().uploadLog(mContext, ZNetworkData.API_UPLOG(), ZNetworkData.uploadlog(filename), file, new OnUploadLogResult() {
 
 			@Override
 			public void uploadLogMethod(boolean isSuccess) {

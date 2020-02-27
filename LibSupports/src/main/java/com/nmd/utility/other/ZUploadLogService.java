@@ -3,18 +3,15 @@ package com.nmd.utility.other;
 import android.content.Context;
 
 import com.android.volley.NetworkResponse;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.nmd.utility.DebugLog;
+import com.nmd.utility.NetworkService;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.HashMap;
 
 public class ZUploadLogService {
 
@@ -22,10 +19,7 @@ public class ZUploadLogService {
 		void uploadLogMethod(boolean isSuccess);
 	}
 
-	static RequestQueue mRequestQueue_uploadLog = null;
-	private static String request_check_time_uploadLog = "";
-
-	public void uploadLog(final Context context, final String url, final ArrayList<Data> data, final String file, final OnUploadLogResult onUploadLogResult) {
+	public void uploadLog(final Context context, final String url, final ArrayList<Data> data, final File file, final OnUploadLogResult onUploadLogResult) {
 		if (context == null) {
 			DebugLog.loge("context == null");
 			onUploadLogResult.uploadLogMethod(false);
@@ -35,26 +29,16 @@ public class ZUploadLogService {
 			DebugLog.loge("url emplty");
 			return;
 		}
-		mRequestQueue_uploadLog = Volley.newRequestQueue(context);
 
-		ArrayList<Data> files = new ArrayList<Data>();
-		files.add(new Data("file", file));
+		HashMap<String, File> files = new HashMap<String, File>();
+		files.put("file", file);
 
-		byte[] multipartBody = Data.multipartBody(data, files);
-
-		if (multipartBody == null) {
-			DebugLog.loge("multipartBody == null");
-			onUploadLogResult.uploadLogMethod(false);
-			return;
-		}
-
-		MultipartRequest multipartRequest = new MultipartRequest(url, null, Data.mimeType, multipartBody, new Response.Listener<NetworkResponse>() {
+		new NetworkService(context).post(url, parseToHashMap(data), files, null, new NetworkService.OnGetResult() {
 			@Override
-			public void onResponse(NetworkResponse response) {
+			public void result(String response) {
 				try {
-					String result = new String(response.data, "UTF-8");
-					DebugLog.loge("upload log response:\n" + result);
-					JSONObject js = new JSONObject(result);
+					DebugLog.loge("upload log response:\n" + response);
+					JSONObject js = new JSONObject(response);
 
 					int code = js.getInt("code");
 					if (code == 1) {
@@ -68,90 +52,30 @@ public class ZUploadLogService {
 					onUploadLogResult.uploadLogMethod(false);
 				}
 			}
-		}, new Response.ErrorListener() {
+
 			@Override
-			public void onErrorResponse(VolleyError error) {
-				DebugLog.loge(error.toString());
+			public void networkResponse(NetworkResponse networkResponse) {
+				DebugLog.loge(networkResponse);
 				onUploadLogResult.uploadLogMethod(false);
 			}
-		});
 
-		multipartRequest.setShouldCache(false);
-		if (request_check_time_uploadLog.equals("")) {
-			request_check_time_uploadLog = "" + System.currentTimeMillis();
-			multipartRequest.setTag(request_check_time_uploadLog);
-			mRequestQueue_uploadLog.add(multipartRequest);
-		} else {
-			mRequestQueue_uploadLog.cancelAll(request_check_time_uploadLog);
-			request_check_time_uploadLog = "" + System.currentTimeMillis();
-			multipartRequest.setTag(request_check_time_uploadLog);
-			mRequestQueue_uploadLog.add(multipartRequest);
-		}
-	}
-
-	static RequestQueue mRequestQueue_uploadLogV2 = null;
-	private static String request_check_time_uploadLogV2 = "";
-
-	public void uploadLogV2(final Context context, final String url, final ArrayList<Data> data, final OnUploadLogResult onUploadLogResult) {
-		if (context == null) {
-			DebugLog.loge("context == null");
-			onUploadLogResult.uploadLogMethod(false);
-			return;
-		}
-		if (url.isEmpty()) {
-			DebugLog.loge("url emplty");
-			return;
-		}
-		mRequestQueue_uploadLogV2 = Volley.newRequestQueue(context);
-
-		StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
 			@Override
-			public void onResponse(String response) {
-				try {
-					JSONObject result = new JSONObject(response);
-					int code = result.getInt("code");
-					if (code == 1) {
-						onUploadLogResult.uploadLogMethod(true);
-					} else {
-						onUploadLogResult.uploadLogMethod(false);
-					}
-				} catch (Exception e) {
-					DebugLog.loge(e);
-					onUploadLogResult.uploadLogMethod(false);
-				}
-			}
-		}, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError error) {
+			public void volleyError(VolleyError error) {
 				DebugLog.loge(error);
 				onUploadLogResult.uploadLogMethod(false);
 			}
-		}) {
-			@Override
-			protected Map<String, String> getParams() {
-				return Data.parseToHashMap(data);
-			}
-		};
 
-		stringRequest.setShouldCache(false);
-		if (request_check_time_uploadLogV2.equals("")) {
-			request_check_time_uploadLogV2 = "" + System.currentTimeMillis();
-			stringRequest.setTag(request_check_time_uploadLogV2);
-			mRequestQueue_uploadLogV2.add(stringRequest);
-		} else {
-			mRequestQueue_uploadLogV2.cancelAll(request_check_time_uploadLogV2);
-			request_check_time_uploadLogV2 = "" + System.currentTimeMillis();
-			stringRequest.setTag(request_check_time_uploadLogV2);
-			mRequestQueue_uploadLogV2.add(stringRequest);
-		}
+			@Override
+			public void error(Exception exception) {
+				DebugLog.loge(exception);
+				onUploadLogResult.uploadLogMethod(false);
+			}
+		});
 	}
 
 	public interface OnCheckLogResult {
 		void checkLogMethod(boolean isSuccess, String status);
 	}
-
-	static RequestQueue mRequestQueue_checkLog = null;
-	private static String request_check_time_checkLog = "";
 
 	public void checkLog(Context context, final String url, final ArrayList<Data> data, final OnCheckLogResult onCheckLogResult) {
 		if (context == null) {
@@ -163,11 +87,10 @@ public class ZUploadLogService {
 			DebugLog.loge("url emplty");
 			return;
 		}
-		mRequestQueue_checkLog = Volley.newRequestQueue(context);
 
-		StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
+		new NetworkService(context).post(url, parseToHashMap(data), null, new NetworkService.OnGetResult() {
 			@Override
-			public void onResponse(String response) {
+			public void result(String response) {
 				try {
 					JSONObject result = new JSONObject(response);
 					int code = result.getInt("code");
@@ -192,30 +115,32 @@ public class ZUploadLogService {
 					onCheckLogResult.checkLogMethod(false, "0");
 				}
 			}
-		}, new Response.ErrorListener() {
+
 			@Override
-			public void onErrorResponse(VolleyError error) {
+			public void networkResponse(NetworkResponse networkResponse) {
+				DebugLog.loge(networkResponse);
+				onCheckLogResult.checkLogMethod(false, "0");
+			}
+
+			@Override
+			public void volleyError(VolleyError error) {
 				DebugLog.loge(error);
 				onCheckLogResult.checkLogMethod(false, "0");
 			}
-		}) {
+
 			@Override
-			protected Map<String, String> getParams() {
-				return Data.parseToHashMap(data);
+			public void error(Exception exception) {
+				DebugLog.loge(exception);
+				onCheckLogResult.checkLogMethod(false, "0");
 			}
-		};
+		});
+	}
 
-		stringRequest.setShouldCache(false);
-		if (request_check_time_checkLog.equals("")) {
-			request_check_time_checkLog = "" + System.currentTimeMillis();
-			stringRequest.setTag(request_check_time_checkLog);
-			mRequestQueue_checkLog.add(stringRequest);
-		} else {
-			mRequestQueue_checkLog.cancelAll(request_check_time_checkLog);
-			request_check_time_checkLog = "" + System.currentTimeMillis();
-			stringRequest.setTag(request_check_time_checkLog);
-			mRequestQueue_checkLog.add(stringRequest);
+	HashMap<String, String> parseToHashMap(ArrayList<Data> data){
+		HashMap<String, String>  params = new HashMap<String, String>();
+		for (Data obj : data) {
+			params.put(obj.getKey(), obj.getValue());
 		}
-
+		return params;
 	}
 }
