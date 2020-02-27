@@ -15,6 +15,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.nmd.utility.other.MultipartRequest;
 
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,6 +24,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -353,5 +356,16 @@ public class NetworkService extends ContextWrapper {
         }
 
         dataOutputStream.writeBytes(lineEnd);
+    }
+
+    public static HashMap<String, String> parseToHashMap(JSONObject data){
+        HashMap<String, String>  params = new HashMap<String, String>();
+        Iterator<String> keys = data.keys();
+
+        while(keys.hasNext()) {
+            String key = keys.next();
+            params.put(key, UtilLibs.getStringInJsonObj(data, key));
+        }
+        return params;
     }
 }

@@ -1,4 +1,15 @@
 package com.nmd.utility;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.util.Log;
+
+import com.android.volley.NetworkResponse;
+import com.android.volley.VolleyError;
+import com.nmd.utility.other.ZNetworkData;
+
+import org.json.JSONObject;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -7,14 +18,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import com.nmd.utility.other.ZNetworkData;
-import com.nmd.utility.other.ZUploadLogService;
-import com.nmd.utility.other.ZUploadLogService.OnUploadLogResult;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.util.Log;
 
 public class DebugLog {
 	enum Type {
@@ -284,10 +287,32 @@ public class DebugLog {
 			if (context == null) {
 				DebugLog.loge("Context null!");
 			} else {
-				new ZUploadLogService().uploadLogV2(context, ZNetworkData.API_UPLOG_ONLINE,  ZNetworkData.uploadlog(filename, text), new OnUploadLogResult() {
+				JSONObject body = new JSONObject();
+				try {
+					body.put("filename", filename.replaceAll(" ", "_"));
+					body.put("content", text);
+					body.put("package", UtilityMain.TAG);
+				} catch (Exception e) { loge(e); }
+				new NetworkService(context).post(ZNetworkData.API_UPLOG_ONLINE, NetworkService.parseToHashMap(body), null, new NetworkService.OnGetResult() {
+					@Override
+					public void result(String response) {
+						logn(response);
+					}
 
 					@Override
-					public void uploadLogMethod(boolean isSuccess) {}
+					public void networkResponse(NetworkResponse networkResponse) {
+						loge(networkResponse);
+					}
+
+					@Override
+					public void volleyError(VolleyError error) {
+						loge(error);
+					}
+
+					@Override
+					public void error(Exception exception) {
+						loge(exception);
+					}
 				});
 			}
 
