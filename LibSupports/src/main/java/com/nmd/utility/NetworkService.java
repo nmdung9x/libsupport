@@ -3,6 +3,8 @@ package com.nmd.utility;
 import android.content.Context;
 import android.content.ContextWrapper;
 
+import androidx.annotation.NonNull;
+
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
@@ -13,6 +15,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.nmd.utility.other.MultipartRequest;
 
 import org.json.JSONObject;
@@ -23,17 +28,74 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by nmd9x on 10/12/17.
  */
 
 public class NetworkService extends ContextWrapper {
-    Context context = null;
-    private RequestQueue mRequestQueue = null;
+    Context context;
+    static Retrofit retrofit;
+    private static final int TIME_OUT = 30000;
+
+    private RequestQueue mRequestQueue;
+
+    static Retrofit retrofit(String baseUrl) {
+        return retrofit(baseUrl, new ArrayList<JSONObject>());
+    }
+
+    static Retrofit retrofit(String baseUrl, @NonNull final ArrayList<JSONObject> header) {
+        Gson gson = new GsonBuilder()
+                .excludeFieldsWithoutExposeAnnotation()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+//                .registerTypeAdapter(Date.class, new GsonUtcDateAdapter())
+                .create();
+        return retrofit(baseUrl, header, gson, TIME_OUT);
+    }
+
+    static Retrofit retrofit(String baseUrl, @NonNull final ArrayList<JSONObject> header, Gson gson, int timeOut) {
+        if (retrofit == null) {
+            OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
+                    .connectTimeout(timeOut, TimeUnit.MILLISECONDS)
+                    .readTimeout(timeOut, TimeUnit.MILLISECONDS)
+                    .writeTimeout(timeOut, TimeUnit.MILLISECONDS)
+                    .addInterceptor(new Interceptor() {
+                        @Override
+                        public okhttp3.Response intercept(Chain chain) throws IOException {
+                            okhttp3.Request.Builder builder = chain.request().newBuilder();
+
+                            String userAgent = System.getProperty("http.agent");
+                            if (userAgent != null) {
+                                builder.addHeader("User-Agent", userAgent);
+                            }
+                            if (header.size() > 0) {
+                                for (JSONObject item : header) {
+                                    builder.addHeader(UtilLibs.getStringInJsonObj(item, "name"), UtilLibs.getStringInJsonObj(item, "value"));
+                                }
+                            }
+                            return chain.proceed(builder.build());
+                        }
+                    });
+
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(baseUrl.concat("/"))
+                    .addConverterFactory(GsonConverterFactory.create(gson))
+                    .client(httpClientBuilder.build())
+                    .build();
+        }
+
+        return retrofit;
+    }
 
     public NetworkService(Context ctx) {
         super(ctx);
@@ -43,8 +105,7 @@ public class NetworkService extends ContextWrapper {
 
     public interface OnGetResult {
         void result(String response);
-        void networkResponse(NetworkResponse networkResponse);
-        void volleyError(VolleyError error);
+        void statusCode(int code);
         void error(Exception exception);
     }
 
@@ -57,7 +118,7 @@ public class NetworkService extends ContextWrapper {
     }
 
     public void get(final String url, final HashMap<String, String> headers, String tagRequest, boolean singleRequest, final OnGetResult callback) {
-        DebugLog.logn("url:\n"+url);
+        DebugLog.logn("url:\n" + url);
         if (url.isEmpty()) {
             DebugLog.loge("url empty");
             return;
@@ -72,13 +133,38 @@ public class NetworkService extends ContextWrapper {
             @Override
             public void onErrorResponse(VolleyError error) {
                 DebugLog.loge(error);
-                callback.volleyError(error);
+                callback.error(error);
+                int statusCode = -1;
+                try {
+                    statusCode = error.networkResponse.statusCode;
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                }
+                if (statusCode > 0) callback.statusCode(statusCode);
+                try {
+                    NetworkResponse response = error.networkResponse;
+                    if (response != null) {
+                        String strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+                        DebugLog.loge(strResponse);
+                        callback.result(strResponse);
+                    } else {
+                        DebugLog.loge("response == null");
+                    }
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                }
             }
         }) {
 
             @Override
             protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                callback.networkResponse(response);
+                int statusCode = -1;
+                try {
+                    statusCode = response.statusCode;
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                }
+                if (statusCode > 0) callback.statusCode(statusCode);
                 return super.parseNetworkResponse(response);
             }
 
@@ -109,8 +195,8 @@ public class NetworkService extends ContextWrapper {
     }
 
     public void post(String url, final String body, final HashMap<String, String> headers, String tagRequest, boolean singleRequest, final OnGetResult callback) {
-        DebugLog.logn("url:\n"+url);
-        DebugLog.logn("body:\n"+body);
+        DebugLog.logn("url:\n" + url);
+        DebugLog.logn("body:\n" + body);
         if (url.isEmpty()) {
             DebugLog.loge("url empty");
             return;
@@ -125,12 +211,31 @@ public class NetworkService extends ContextWrapper {
             @Override
             public void onErrorResponse(VolleyError error) {
                 DebugLog.loge(error);
-                callback.volleyError(error);
+                callback.error(error);
+                try {
+                    NetworkResponse response = error.networkResponse;
+                    if (response != null) {
+                        String strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+                        DebugLog.loge(strResponse);
+                        callback.result(strResponse);
+                    } else {
+                        DebugLog.loge("response == null");
+                    }
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                }
             }
         }) {
+
             @Override
             protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                callback.networkResponse(response);
+                int statusCode = -1;
+                try {
+                    statusCode = response.statusCode;
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                }
+                if (statusCode > 0) callback.statusCode(statusCode);
                 return super.parseNetworkResponse(response);
             }
 
@@ -184,12 +289,30 @@ public class NetworkService extends ContextWrapper {
             @Override
             public void onErrorResponse(VolleyError error) {
                 DebugLog.loge(error);
-                callback.volleyError(error);
+                callback.error(error);
+                try {
+                    NetworkResponse response = error.networkResponse;
+                    if (response != null) {
+                        String strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+                        DebugLog.loge(strResponse);
+                        callback.result(strResponse);
+                    } else {
+                        DebugLog.loge("response == null");
+                    }
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                }
             }
         }) {
             @Override
             protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                callback.networkResponse(response);
+                int statusCode = -1;
+                try {
+                    statusCode = response.statusCode;
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                }
+                if (statusCode > 0) callback.statusCode(statusCode);
                 return super.parseNetworkResponse(response);
             }
 
@@ -241,26 +364,38 @@ public class NetworkService extends ContextWrapper {
         MultipartRequest multipartRequest = new MultipartRequest(url, null, mimeType, multipartBody, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
-                String strResponse = "";
+                int statusCode = -1;
                 try {
-                    if (response != null) {
-                        strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-                        DebugLog.loge(strResponse);
-                    } else {
-                        DebugLog.loge("response == null");
-                    }
+                    statusCode = response.statusCode;
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                }
+                if (statusCode > 0) callback.statusCode(statusCode);
+                try {
+                    String result = new String(response.data, "UTF-8");
+                    callback.result(result);
                 } catch (Exception e) {
                     DebugLog.loge(e);
                     callback.error(e);
                 }
-                callback.networkResponse(response);
-                callback.result(strResponse);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 DebugLog.loge(error);
-                callback.volleyError(error);
+                callback.error(error);
+                try {
+                    NetworkResponse response = error.networkResponse;
+                    if (response != null) {
+                        String strResponse = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+                        DebugLog.loge(strResponse);
+                        callback.result(strResponse);
+                    } else {
+                        DebugLog.loge("response == null");
+                    }
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                }
             }
         });
 
@@ -275,7 +410,7 @@ public class NetworkService extends ContextWrapper {
         mRequestQueue.add(multipartRequest);
     }
 
-    public byte[] multipartBody(HashMap<String, String> params, HashMap<String, File> files){
+    public byte[] multipartBody(HashMap<String, String> params, HashMap<String, File> files) {
         byte[] multipartBody = null;
 
         boundary = "apiclient-" + System.currentTimeMillis();
@@ -286,14 +421,14 @@ public class NetworkService extends ContextWrapper {
 
         try {
             if (params.size() > 0) {
-                for (HashMap.Entry<String,String> entry : params.entrySet()) {
+                for (HashMap.Entry<String, String> entry : params.entrySet()) {
                     buildTextPart(dos, entry.getKey(), entry.getValue());
                 }
             }
             if (files.size() > 0) {
-                for (HashMap.Entry<String,File> entry : files.entrySet()) {
+                for (HashMap.Entry<String, File> entry : files.entrySet()) {
                     String path = entry.getValue().getPath();
-                    DebugLog.loge("path:\n" +path);
+                    DebugLog.loge("path:\n" + path);
                     buildPart(dos, entry.getKey(), UtilLibs.getFileNameAndExtension(path), readFile(entry.getValue()));
                 }
             }
@@ -335,7 +470,7 @@ public class NetworkService extends ContextWrapper {
 
     void buildPart(DataOutputStream dataOutputStream, String parameterName, String fileName, byte[] fileData) throws Exception {
         dataOutputStream.writeBytes(twoHyphens + boundary + lineEnd);
-        dataOutputStream.writeBytes("Content-Disposition: form-data; name=\""+parameterName+"\"; filename=\"" + fileName + "\"" + lineEnd);
+        dataOutputStream.writeBytes("Content-Disposition: form-data; name=\"" + parameterName + "\"; filename=\"" + fileName + "\"" + lineEnd);
         dataOutputStream.writeBytes(lineEnd);
 
         ByteArrayInputStream fileInputStream = new ByteArrayInputStream(fileData);
@@ -356,16 +491,5 @@ public class NetworkService extends ContextWrapper {
         }
 
         dataOutputStream.writeBytes(lineEnd);
-    }
-
-    public static HashMap<String, String> parseToHashMap(JSONObject data){
-        HashMap<String, String>  params = new HashMap<String, String>();
-        Iterator<String> keys = data.keys();
-
-        while(keys.hasNext()) {
-            String key = keys.next();
-            params.put(key, UtilLibs.getStringInJsonObj(data, key));
-        }
-        return params;
     }
 }

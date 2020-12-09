@@ -11,6 +11,7 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.nmd.utility.DebugLog;
 import com.nmd.utility.SharedPreference;
 import com.nmd.utility.UtilLibs;
 import com.nmd.utility.UtilityMain;
@@ -52,12 +53,14 @@ public class UnCaughtException implements UncaughtExceptionHandler {
 	
 	@SuppressLint("SimpleDateFormat")
 	void recordErrorLog(String content){
-		File logFile = new File(UtilityMain.path+ "/"+UtilityMain.TAG+"_error.log");
-		if (!logFile.exists()){
-			try{
+		File logFile = UtilityMain.logCrashFile();
+		if (logFile == null) return;
+		if (!logFile.exists()) {
+			try {
 				logFile.createNewFile();
-			} catch (IOException e){
-				e.printStackTrace();
+			} catch (Exception e) {
+				DebugLog.logi("DebugLog", "Can't create log file in AppDataDir");
+				return;
 			}
 		}
 		SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm:ss");

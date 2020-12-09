@@ -618,4 +618,12 @@ public class FileUtils {
             return File.separator;
         }
     }
+
+    public static String getAppDataDir(Context context) {
+        File tmp = context.getExternalFilesDir(null);
+        if (tmp.exists()) {
+            return tmp.getAbsolutePath();
+        }
+        return Environment.getExternalStorageDirectory().toString() + "/Android/data/" + context.getPackageName().toString() + "/files";
+    }
 }

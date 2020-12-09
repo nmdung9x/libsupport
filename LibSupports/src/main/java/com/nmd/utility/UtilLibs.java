@@ -35,6 +35,7 @@ import android.provider.Telephony;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.method.ScrollingMovementMethod;
+import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.util.Base64;
@@ -58,6 +59,8 @@ import android.widget.ScrollView;
 import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresPermission;
 
 import com.nmd.utility.other.Data;
 import com.nmd.utility.other.ResizeHeightAnimation;
@@ -143,7 +146,7 @@ public class UtilLibs {
 	/**
 	 * Get DateTime.
 	 *
-	 * @param dateTime
+	 * @param dateTimeInMiliseconds
 	 *            datetime in miliseconds
 	 * @param format
 	 *            like "yyyy/MM/dd HH:mm:ss"
@@ -567,7 +570,7 @@ public class UtilLibs {
 	 * @param context
 	 *            The context to use. Usually your Application or Activity
 	 *            object.
-	 * @param edt
+	 * @param view
 	 *            must be EditText
 	 * 
 	 */
@@ -963,7 +966,7 @@ public class UtilLibs {
 	/**
 	 * Encrypt AES.
 	 *
-	 * @param text
+	 * @param data
 	 *            input string
 	 * 
 	 * @return (String) result.
@@ -984,7 +987,7 @@ public class UtilLibs {
 	/**
 	 * Decrypt AES.
 	 *
-	 * @param text
+	 * @param encryptedValue
 	 *            input string
 	 * 
 	 * @return (String) result.
@@ -1025,7 +1028,7 @@ public class UtilLibs {
 	/**
 	 * Gen KeyHash for facebook or something use.
 	 *
-	 * @param manager
+	 * @param context
 	 *            Class for retrieving various kinds of information related to
 	 *            the application packages that are currently installed on the
 	 *            device.
@@ -1404,6 +1407,7 @@ public class UtilLibs {
 	 * 
 	 * @return (boolean) true/false.
 	 */
+	@RequiresPermission(android.Manifest.permission.ACCESS_NETWORK_STATE)
 	public static boolean isNetworkConnect(Context context) {
 		final ConnectivityManager conMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 		final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
@@ -1619,6 +1623,44 @@ public class UtilLibs {
 			DebugLog.loge(e);
 		}
 		return new ArrayList<>();
+	}
+
+	public static JSONObject putObject(JSONObject jsonObject, String key, Object value) {
+		try {
+			if (jsonObject != null) {
+				jsonObject.put(key, value);
+			}
+		} catch (Exception e) { DebugLog.logi(e); }
+		return jsonObject;
+	}
+
+	public static JSONObject getJSONObjectFromJSONArray(JSONArray array, int pos) {
+		try {
+			if (pos < array.length()) {
+				return array.getJSONObject(pos);
+			}
+		} catch (Exception e) { DebugLog.logi(e); }
+		return null;
+	}
+
+	public static JSONArray addAll(JSONArray jsonArray, JSONArray jsonArray2) {
+		try {
+			if (jsonArray2.length() > 0) {
+				for (int i = 0; i < jsonArray2.length(); i++) {
+					jsonArray.put(jsonArray2.get(i));
+				}
+			}
+		} catch (Exception e) { DebugLog.logi(e); }
+		return jsonArray;
+	}
+
+	public static String formatCurrency(String value) {
+		if (Build.VERSION.SDK_INT >= 24) {
+			DecimalFormat df = new DecimalFormat("#,###,###,###,###"); //"#,###,###,###,###"
+			return formatCurrency(value, df);
+		} else {
+			return getDecimalFormattedString(value);
+		}
 	}
 
 	public static String formatCurrency(String value, String pattern) {
@@ -2612,14 +2654,14 @@ public class UtilLibs {
 	}
 
 	public static void colorText(TextView textView, String textSelect, String color) {
-		styleText(textView, textSelect, color, false);
+		styleText(textView, textSelect, color, textView.getTextSize(), -1);
 	}
 
 	public static void boldText(TextView textView, String textSelect) {
-		styleText(textView, textSelect, "", true);
+		styleText(textView, textSelect, "", textView.getTextSize(), android.graphics.Typeface.BOLD);
 	}
 
-	public static void styleText(TextView textView, String textSelect, String color, boolean isBold) {
+	public static void styleText(TextView textView, String textSelect, String color, float textSize, int typeface) {
 		if (!color.isEmpty() && !color.contains("#")) {
 			color = "#"+color;
 		}
@@ -2629,9 +2671,9 @@ public class UtilLibs {
 			Spannable s = (Spannable) textView.getText();
 			int start = textView.getText().toString().indexOf(textSelect);
 			int end = start + textSelect.length();
-			if (isBold) s.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+			if (typeface != -1) s.setSpan(new StyleSpan(typeface), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 			if (!color.isEmpty()) s.setSpan(new ForegroundColorSpan(Color.parseColor(color)), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-//            if (textSize > 0) s.setSpan(new AbsoluteSizeSpan(textSize), start, end, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+            if (textSize > 0) s.setSpan(new AbsoluteSizeSpan((int) textSize), start, end, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
 		} catch (Exception e) {
 			DebugLog.loge(e);
 			textView.setText(origin);
@@ -2689,4 +2731,25 @@ public class UtilLibs {
 		}
 		return result.toString();
 	}
+
+	public static int checkPosition(ArrayList<JSONObject> arrayList, String check, String key) {
+		if (check.trim().isEmpty()) return -1;
+		int selected = 0;
+		boolean isSelected = false;
+
+		if (check.length() > 0) {
+			for (JSONObject obj : arrayList) {
+				String title = UtilLibs.getStringInJsonObj(obj, key).trim();
+
+				if (title.equals(check.trim())) {
+					isSelected = true;
+					break;
+				}
+				selected++;
+			}
+		}
+		if (!isSelected) selected = -1;
+		return selected;
+	}
+
 }

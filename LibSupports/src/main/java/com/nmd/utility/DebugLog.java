@@ -1,14 +1,7 @@
 package com.nmd.utility;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.util.Log;
-
-import com.android.volley.NetworkResponse;
-import com.android.volley.VolleyError;
-import com.nmd.utility.other.ZNetworkData;
-
-import org.json.JSONObject;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,34 +22,30 @@ public class DebugLog {
 		e
 	}
 	
-	public static void log(Type type, String tag, String msg, Object obj, boolean upOnline){
-    	String message = "";
-    	boolean isException = false;
-    	if (obj != null) {
-    		if (obj instanceof Exception) {
-        		isException = true;
-        		Exception e = (Exception) obj;
-        		StringWriter errors = new StringWriter();
-            	e.printStackTrace(new PrintWriter(errors));
-            	
-            	message = msg.trim().isEmpty() ? errors.toString() : msg.trim()+"\n"+errors.toString();
-        	} else if (obj instanceof Throwable) {
-        		isException = true;
-        		Throwable e = (Throwable) obj;
-        		StringWriter errors = new StringWriter();
-            	e.printStackTrace(new PrintWriter(errors));
-            	
-            	message = msg.trim().isEmpty() ? errors.toString() : msg.trim()+"\n"+errors.toString();
-        	} else {
-        		isException = false;
-        		message = msg.trim().isEmpty() ? String.valueOf(obj).trim() : msg.trim()+"\n"+String.valueOf(obj).trim();
-        	}
-    	} else {
-    		isException = false;
-    		message = msg.trim();
-    	}
- 
-    	
+	public static String log(Type type, String tag, Object msg){
+    	if (msg == null) msg = "";
+    	if (String.valueOf(msg).trim().isEmpty()) return "";
+		String message;
+		boolean isException = false;
+
+		if (msg instanceof Exception) {
+			isException = true;
+			Exception e = (Exception) msg;
+			StringWriter errors = new StringWriter();
+			e.printStackTrace(new PrintWriter(errors));
+
+			message = errors.toString();
+		} else if (msg instanceof Throwable) {
+			isException = true;
+			Throwable e = (Throwable) msg;
+			StringWriter errors = new StringWriter();
+			e.printStackTrace(new PrintWriter(errors));
+
+			message = errors.toString();
+		} else {
+			message = String.valueOf(msg).trim();
+		}
+
     	StackTraceElement stack = Thread.currentThread().getStackTrace()[4];
         String fullClassName = stack.getClassName();
         String className = fullClassName.substring(fullClassName.lastIndexOf(".") + 1);
@@ -69,267 +58,131 @@ public class DebugLog {
         int lineNumber = stack.getLineNumber();
         
         String check = "at ("+ className + ".java:" + lineNumber + ") " + "[" + methodName + "] ";
-        
-        if (isException) {
-        	switch (type) {
+
+		switch (type) {
 			case v:
-				if (UtilityMain.SHOW_LOG_D) {
+				if (UtilityMain.SHOW_LOG_D || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
 					Log.v(tag, check + message);
 				}
-				if (UtilityMain.DEBUG_D) {
-		            appendLog("Log---v " + check + message, upOnline, tag);
-		        }
+				if (UtilityMain.DEBUG_D || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
+					appendLog("Log---v " + check + message);
+				}
 				break;
 
 			case d:
-				if (UtilityMain.SHOW_LOG_D) {
+				if (UtilityMain.SHOW_LOG_D || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
 					Log.d(tag, check + message);
 				}
-				if (UtilityMain.DEBUG_D) {
-		            appendLog("Log---d " + check + message, upOnline, tag);
-		        }
+				if (UtilityMain.DEBUG_D || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
+					appendLog("Log---d " + check + message);
+				}
 				break;
 
 			case i:
-				if (UtilityMain.SHOW_LOG_I) {
+				if (UtilityMain.SHOW_LOG_I || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
 					Log.i(tag, check + message);
 				}
-				if (UtilityMain.DEBUG_I) {
-		            appendLog("Log---i " + check + message, upOnline, tag);
-		        } else {
-					if (upOnline) {
-						appendLog("Log---i " + check + message, true, tag);
-					}
+				if (UtilityMain.DEBUG_I || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
+					appendLog("Log---i " + check + message);
 				}
 				break;
 
 			case n:
-				if (UtilityMain.SHOW_LOG_N) {
+				if (UtilityMain.SHOW_LOG_N || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
 					Log.i(tag, check + message);
 				}
-				if (UtilityMain.DEBUG_N) {
-		            appendLog("Log---n " + check + message, upOnline, tag);
-		        }
+				if (UtilityMain.DEBUG_N || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
+					appendLog("Log---n " + check + message);
+				}
 				break;
 
 			case w:
-				if (UtilityMain.SHOW_LOG_I) {
+				if (UtilityMain.SHOW_LOG_I || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
 					Log.w(tag, check + message);
 				}
-				if (UtilityMain.DEBUG_I) {
-		            appendLog("Log---w " + check + message, upOnline, tag);
-		        }
+				if (UtilityMain.DEBUG_I || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
+					appendLog("Log---w " + check + message);
+				}
 				break;
 
 			case e:
-				if (UtilityMain.SHOW_LOG_E) {
+				if (UtilityMain.SHOW_LOG_E || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
 					Log.e(tag, check + message);
 				}
-				if (UtilityMain.DEBUG_E) {
-		            appendLog("Log---e " + check + message, upOnline, tag);
-		        }
+				if (UtilityMain.DEBUG_E || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
+					appendLog("Log---e " + check + message);
+				}
 				break;
 
 			default:
 				break;
-			}
-        } else {
-        	switch (type) {
-			case v:
-				if (UtilityMain.SHOW_LOG_D && UtilityMain.SHOW_LOG_E_EXCEPTION) {
-					Log.v(tag, check + message);
-				}
-				if (UtilityMain.DEBUG_D && UtilityMain.DEBUG_E_EXCEPTION) {
-		            appendLog("Log---v " + check + message, upOnline, tag);
-		        }
-				break;
-
-			case d:
-				if (UtilityMain.SHOW_LOG_D && UtilityMain.SHOW_LOG_E_EXCEPTION) {
-					Log.d(tag, check + message);
-				}
-				if (UtilityMain.DEBUG_D && UtilityMain.DEBUG_E_EXCEPTION) {
-		            appendLog("Log---d " + check + message, upOnline, tag);
-		        }
-				break;
-
-			case i:
-				if (UtilityMain.SHOW_LOG_I && UtilityMain.SHOW_LOG_E_EXCEPTION) {
-					Log.i(tag, check + message);
-				}
-				if (UtilityMain.DEBUG_I && UtilityMain.DEBUG_E_EXCEPTION) {
-		            appendLog("Log---i " + check + message, upOnline, tag);
-				} else {
-					if (upOnline) {
-						appendLog("Log---i " + check + message, true, tag);
-					}
-				}
-				break;
-
-			case n:
-				if (UtilityMain.SHOW_LOG_N && UtilityMain.SHOW_LOG_E_EXCEPTION) {
-					Log.i(tag, check + message);
-				}
-				if (UtilityMain.DEBUG_N && UtilityMain.DEBUG_E_EXCEPTION) {
-		            appendLog("Log---n " + check + message, upOnline, tag);
-		        }
-				break;
-
-			case w:
-				if (UtilityMain.SHOW_LOG_I && UtilityMain.SHOW_LOG_E_EXCEPTION) {
-					Log.w(tag, check + message);
-				}
-				if (UtilityMain.DEBUG_I && UtilityMain.DEBUG_E_EXCEPTION) {
-		            appendLog("Log---w " + check + message, upOnline, tag);
-		        }
-				break;
-
-			case e:
-				if (UtilityMain.SHOW_LOG_E_EXCEPTION) {
-					Log.e(tag, check + message);
-				}
-				if (UtilityMain.DEBUG_E_EXCEPTION) {
-		            appendLog("Log---e " + check + message, upOnline, tag);
-		        }
-				break;
-
-			default:
-				break;
-			}
-        }
-        
+		}
+        return check + message;
     }
 	
     public static void logv(Object obj){
-        log(Type.v, UtilityMain.TAG, "", obj, false);
+        log(Type.v, UtilityMain.TAG, obj);
     }
     
     public static void logv(String tag, Object obj){
-    	log(Type.v, tag, "", obj, false);
-    }
-    
-    public static void logv(String tag, String msg, Object obj){
-    	log(Type.v, tag, msg, obj, false);
+    	log(Type.v, tag, obj);
     }
 	
     public static void logd(Object obj){
-        log(Type.d, UtilityMain.TAG, "", obj, false);
+        log(Type.d, UtilityMain.TAG, obj);
     }
     
     public static void logd(String tag, Object obj){
-    	log(Type.d, tag, "", obj, false);
-    }
-    
-    public static void logd(String tag, String msg, Object obj){
-    	log(Type.d, tag, msg, obj, false);
+    	log(Type.d, tag, obj);
     }
 	
     public static void logi(Object obj){
-        log(Type.i, UtilityMain.TAG, "", obj, false);
+        log(Type.i, UtilityMain.TAG, obj);
     }
     
     public static void logi(String tag, Object obj){
-    	log(Type.i, tag, "", obj, false);
+    	log(Type.i, tag, obj);
     }
-    
-    public static void logi(String tag, String msg, Object obj){
-    	log(Type.i, tag, msg, obj, false);
-    }
-	
+
     public static void logn(Object obj){
-        log(Type.n, UtilityMain.TAG, "", obj, false);
+        log(Type.n, UtilityMain.TAG, obj);
     }
     
     public static void logn(String tag, Object obj){
-    	log(Type.n, tag, "", obj, false);
+    	log(Type.n, tag, obj);
     }
-    
-    public static void logn(String tag, String msg, Object obj){
-    	log(Type.n, tag, msg, obj, false);
-    }
-	
+
     public static void logw(Object obj){
-        log(Type.w, UtilityMain.TAG, "", obj, false);
+        log(Type.w, UtilityMain.TAG, obj);
     }
     
     public static void logw(String tag, Object obj){
-    	log(Type.w, tag, "", obj, false);
-    }
-    
-    public static void logw(String tag, String msg, Object obj){
-    	log(Type.w, tag, msg, obj, false);
+    	log(Type.w, tag, obj);
     }
 	
     public static void loge(Object obj){
-        log(Type.e, UtilityMain.TAG, "", obj, false);
+        log(Type.e, UtilityMain.TAG, obj);
     }
     
     public static void loge(String tag, Object obj){
-    	log(Type.e, tag, "", obj, false);
+    	log(Type.e, tag, obj);
     }
     
-    public static void loge(String tag, String msg, Object obj){
-    	log(Type.e, tag, msg, obj, false);
-    }
-    
-    public static void log_online(Object obj){
-    	log(Type.i, "", "", obj, true);
-    }
-    
-    public static void log_online(String filename, Object obj){
-    	log(Type.i, filename, "", obj, true);
-    }
-    
-	static void appendLog(String text, boolean upOnline, String filename) {
-		if (upOnline && UtilityMain.DEBUG_ONLINE && !text.trim().isEmpty()) {
-			if (filename.trim().isEmpty()) filename = UtilityMain.zfilename();
-			Context context = UtilityMain.mContext;
-			if (context == null) {
-				DebugLog.loge("Context null!");
-			} else {
-				JSONObject body = new JSONObject();
-				try {
-					body.put("filename", filename.replaceAll(" ", "_"));
-					body.put("content", text);
-					body.put("package", UtilityMain.TAG);
-				} catch (Exception e) { loge(e); }
-				new NetworkService(context).post(ZNetworkData.API_UPLOG_ONLINE, NetworkService.parseToHashMap(body), null, new NetworkService.OnGetResult() {
-					@Override
-					public void result(String response) {
-						logn(response);
-					}
-
-					@Override
-					public void networkResponse(NetworkResponse networkResponse) {
-						loge(networkResponse);
-					}
-
-					@Override
-					public void volleyError(VolleyError error) {
-						loge(error);
-					}
-
-					@Override
-					public void error(Exception exception) {
-						loge(exception);
-					}
-				});
-			}
-
-		}
+	static void appendLog(String text) {
 		if (!UtilityMain.isRecordLog) {
 			return;
 		}
-		
+
+		File logFile = UtilityMain.logFile();
+		if (logFile == null) return;
 		boolean isNew = false;
-		
-		File logFile = new File(UtilityMain.path + "/" + UtilityMain.TAG + ".log");
 		if (!logFile.exists()) {
 			try {
 				logFile.createNewFile();
 				isNew = true;
 			} catch (IOException e) {
-				e.printStackTrace();
+				logi("DebugLog", "Can't create log file in AppDataDir");
+				return;
 			}
 		}
 		try {
