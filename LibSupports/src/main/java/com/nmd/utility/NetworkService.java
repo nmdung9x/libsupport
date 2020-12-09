@@ -46,16 +46,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NetworkService extends ContextWrapper {
     Context context;
-    static Retrofit retrofit;
+    private RequestQueue mRequestQueue;
     private static final int TIME_OUT = 30000;
 
-    private RequestQueue mRequestQueue;
 
     public static Retrofit retrofit(String baseUrl) {
-        return retrofit(baseUrl, new ArrayList<JSONObject>());
+        return retrofit(baseUrl, new JSONObject());
     }
 
-    public static Retrofit retrofit(String baseUrl, @NonNull final ArrayList<JSONObject> header) {
+    public static Retrofit retrofit(String baseUrl, @NonNull final JSONObject header) {
         Gson gson = new GsonBuilder()
                 .excludeFieldsWithoutExposeAnnotation()
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -64,38 +63,35 @@ public class NetworkService extends ContextWrapper {
         return retrofit(baseUrl, header, gson, TIME_OUT);
     }
 
-    public static Retrofit retrofit(String baseUrl, @NonNull final ArrayList<JSONObject> header, Gson gson, int timeOut) {
-        if (retrofit == null) {
-            OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
-                    .connectTimeout(timeOut, TimeUnit.MILLISECONDS)
-                    .readTimeout(timeOut, TimeUnit.MILLISECONDS)
-                    .writeTimeout(timeOut, TimeUnit.MILLISECONDS)
-                    .addInterceptor(new Interceptor() {
-                        @Override
-                        public okhttp3.Response intercept(Chain chain) throws IOException {
-                            okhttp3.Request.Builder builder = chain.request().newBuilder();
+    public static Retrofit retrofit(String baseUrl, @NonNull final JSONObject header, Gson gson, int timeOut) {
+        OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
+                .connectTimeout(timeOut, TimeUnit.MILLISECONDS)
+                .readTimeout(timeOut, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeOut, TimeUnit.MILLISECONDS)
+                .addInterceptor(new Interceptor() {
+                    @Override
+                    public okhttp3.Response intercept(Chain chain) throws IOException {
+                        okhttp3.Request.Builder builder = chain.request().newBuilder();
 
-                            String userAgent = System.getProperty("http.agent");
-                            if (userAgent != null) {
-                                builder.addHeader("User-Agent", userAgent);
-                            }
-                            if (header.size() > 0) {
-                                for (JSONObject item : header) {
-                                    builder.addHeader(UtilLibs.getStringInJsonObj(item, "name"), UtilLibs.getStringInJsonObj(item, "value"));
-                                }
-                            }
-                            return chain.proceed(builder.build());
+                        String userAgent = System.getProperty("http.agent");
+                        if (userAgent != null) {
+                            builder.addHeader("User-Agent", userAgent);
                         }
-                    });
 
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(baseUrl.concat("/"))
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .client(httpClientBuilder.build())
-                    .build();
-        }
+                        Iterator<String> keys = header.keys();
+                        while(keys.hasNext()) {
+                            String key = keys.next();
+                            builder.addHeader(key, UtilLibs.getStringInJsonObj(header, key));
+                        }
+                        return chain.proceed(builder.build());
+                    }
+                });
 
-        return retrofit;
+        return new Retrofit.Builder()
+                .baseUrl(baseUrl.concat("/"))
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(httpClientBuilder.build())
+                .build();
     }
 
     public NetworkService(Context ctx) {
