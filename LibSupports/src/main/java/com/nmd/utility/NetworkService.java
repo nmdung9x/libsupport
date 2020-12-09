@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -50,11 +51,11 @@ public class NetworkService extends ContextWrapper {
 
     private RequestQueue mRequestQueue;
 
-    static Retrofit retrofit(String baseUrl) {
+    public static Retrofit retrofit(String baseUrl) {
         return retrofit(baseUrl, new ArrayList<JSONObject>());
     }
 
-    static Retrofit retrofit(String baseUrl, @NonNull final ArrayList<JSONObject> header) {
+    public static Retrofit retrofit(String baseUrl, @NonNull final ArrayList<JSONObject> header) {
         Gson gson = new GsonBuilder()
                 .excludeFieldsWithoutExposeAnnotation()
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -63,7 +64,7 @@ public class NetworkService extends ContextWrapper {
         return retrofit(baseUrl, header, gson, TIME_OUT);
     }
 
-    static Retrofit retrofit(String baseUrl, @NonNull final ArrayList<JSONObject> header, Gson gson, int timeOut) {
+    public static Retrofit retrofit(String baseUrl, @NonNull final ArrayList<JSONObject> header, Gson gson, int timeOut) {
         if (retrofit == null) {
             OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
                     .connectTimeout(timeOut, TimeUnit.MILLISECONDS)
@@ -491,5 +492,16 @@ public class NetworkService extends ContextWrapper {
         }
 
         dataOutputStream.writeBytes(lineEnd);
+    }
+
+    public static HashMap<String, String> parseToHashMap(JSONObject data){
+        HashMap<String, String>  params = new HashMap<String, String>();
+        Iterator<String> keys = data.keys();
+
+        while(keys.hasNext()) {
+            String key = keys.next();
+            params.put(key, UtilLibs.getStringInJsonObj(data, key));
+        }
+        return params;
     }
 }
