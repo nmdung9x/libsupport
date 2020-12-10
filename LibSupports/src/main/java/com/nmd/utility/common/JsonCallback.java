@@ -15,9 +15,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 
 public abstract class JsonCallback<T> implements Callback<T> {
-    abstract public void onSuccess(Call<T> call, JSONObject jsonObject);
+    abstract public void onSuccess(int statusCode, JSONObject jsonObject);
 
-    abstract public void onFailed(Call<T> call, ErrorR error);
+    abstract public void onFailed(@NonNull Call<T> call, ErrorR error);
 
     @SuppressWarnings("WeakerAccess")
     @CallSuper
@@ -27,28 +27,50 @@ public abstract class JsonCallback<T> implements Callback<T> {
 
     @Override
     public void onResponse(@NonNull Call<T> call, @NonNull retrofit2.Response<T> response) {
-        log(call);
         if (call.isCanceled()) {
             onCancelled(call);
             return;
         }
+        log(call, response.code());
 
-        DebugLog.logn("status code: "+response.code());
         if (response.isSuccessful()) {
-            onSuccess(call, getBody(response));
-        } else {
-            onFailed(call, new ErrorR(response.errorBody(), response.code(), null));
+            if (response.body() != null) {
+                try {
+                    String gson = new Gson().toJson(response.body());
+                    DebugLog.logn(gson);
+                    if (gson.length() > 1) {
+                        if (gson.substring(0, 1).equals("{")) {
+                            onSuccess(response.code(), new JSONObject(gson));
+                        } else if (gson.substring(0, 1).equals("[")) {
+                            JSONObject results = new JSONObject();
+                            results.put("data", new JSONArray(gson));
+                            onSuccess(response.code(), results);
+                        } else {
+                            onFailed(call, new ErrorR(null, response.code(), null));
+                        }
+                    } else {
+                        onFailed(call, new ErrorR(null, response.code(), null));
+                    }
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                    onFailed(call, new ErrorR(null, response.code(), e));
+                }
+            } else {
+                onSuccess(response.code(), null);
+            }
+            return;
         }
+
+        onFailed(call, new ErrorR(response.errorBody(), response.code(), null));
     }
 
     @Override
     public void onFailure(@NonNull Call<T> call, @NonNull Throwable t) {
-        log(call);
         if (call.isCanceled()) {
             onCancelled(call);
             return;
-        };
-
+        }
+        log(call, -1);
         onFailed(call, new ErrorR(null, 0, t));
     }
 
@@ -56,38 +78,8 @@ public abstract class JsonCallback<T> implements Callback<T> {
         DebugLog.loge(call.request().method() + " " + call.request().url() + " cancelled");
     }
 
-    private JSONObject getBody(@NonNull retrofit2.Response<T> response) {
-        if (response.body() != null) {
-            try {
-                String gson = new Gson().toJson(response.body());
-                if (!gson.trim().isEmpty()) {
-                    if (gson.substring(0, 1).equals("{")) {
-                        DebugLog.logn(gson);
-                        return new JSONObject(gson);
-                    } else if (gson.substring(0, 1).equals("[")) {
-                        JSONObject results = new JSONObject();
-                        results.put("content", new JSONArray(gson));
-                        DebugLog.logn(results);
-                        return results;
-                    } else {
-                        JSONObject content = new JSONObject();
-                        content.put("content", gson);
-                        DebugLog.logn(content);
-                        return content;
-                    }
-                } else {
-                    DebugLog.loge(response.body());
-                    return null;
-                }
-            } catch (Exception e) {
-                DebugLog.loge(e);
-            }
-        }
-        return null;
-    }
-
-    private void log(Call<T> call) {
-        DebugLog.logn(call.request().method() + " : "+call.request().url().toString());
+    private void log(Call<T> call, int statusCode) {
+        DebugLog.logn(call.request().method() + " : "+call.request().url().toString() + " [" + statusCode + "]");
         if (call.request().method().toLowerCase().equals("post")) {
             DebugLog.logn("[Request Body] "+bodyToString(call.request().body()));
         }

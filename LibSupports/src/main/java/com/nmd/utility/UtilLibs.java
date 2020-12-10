@@ -83,6 +83,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.security.Key;
 import java.security.MessageDigest;
@@ -749,6 +750,17 @@ public class UtilLibs {
         	}
         }
     }
+
+	public static String getDomainName(String url) {
+		try {
+			URI uri = new URI(url.toLowerCase());
+			String domain = uri.getHost();
+			return domain.startsWith("www.") ? domain.substring(4) : domain;
+		} catch (Exception e) {
+			DebugLog.logv(e);
+		}
+		return url;
+	}
 	
 	/**
 	 * Get File Name And Extension.

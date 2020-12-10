@@ -18,6 +18,9 @@ import com.android.volley.toolbox.Volley;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.nmd.utility.common.ErrorR;
+import com.nmd.utility.common.JsonCallback;
 import com.nmd.utility.other.MultipartRequest;
 
 import org.json.JSONObject;
@@ -29,7 +32,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -37,8 +39,14 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.Body;
+import retrofit2.http.GET;
+import retrofit2.http.POST;
+import retrofit2.http.Url;
 
 /**
  * Created by nmd9x on 10/12/17.
@@ -48,7 +56,6 @@ public class NetworkService extends ContextWrapper {
     Context context;
     private RequestQueue mRequestQueue;
     private static final int TIME_OUT = 30000;
-
 
     public static Retrofit retrofit(String baseUrl) {
         return retrofit(baseUrl, new JSONObject());
@@ -87,11 +94,84 @@ public class NetworkService extends ContextWrapper {
                     }
                 });
 
-        return new Retrofit.Builder()
-                .baseUrl(baseUrl.concat("/"))
+        return baseUrl.isEmpty() ?
+                new Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(httpClientBuilder.build())
-                .build();
+                .build() :
+                new Retrofit.Builder()
+                        .baseUrl(baseUrl.concat("/"))
+                        .addConverterFactory(GsonConverterFactory.create(gson))
+                        .client(httpClientBuilder.build())
+                        .build();
+    }
+
+    public interface RetrofitCall {
+        @GET
+        Call<JsonElement> get(@Url String url);
+
+        @POST
+        Call<JsonElement> post(@Url String url, @Body RequestBody body);
+    }
+
+    public interface OnResponse {
+        void result(int statusCode, JSONObject responseJson, String errorString);
+    }
+
+    public static void get(String url, final OnResponse callback) {
+        get(url, new JSONObject(), callback);
+    }
+
+    public static void get(String url, JSONObject header, final OnResponse callback) {
+        RetrofitCall call = retrofit("", header).create(RetrofitCall.class);
+        call.get(url).enqueue(new JsonCallback<JsonElement>() {
+            @Override
+            public void onSuccess(int statusCode, JSONObject jsonObject) {
+                if (callback != null) {
+                    callback.result(statusCode, jsonObject, "");
+                }
+            }
+
+            @Override
+            public void onFailed(@NonNull Call<JsonElement> call, ErrorR error) {
+                if (callback != null) {
+                    callback.result(error.getCode(), new JSONObject(), error.getContent());
+                }
+            }
+        });
+    }
+
+    public static void post(String url, JSONObject params, final OnResponse callback) {
+        post(url, new JSONObject(), params, callback);
+    }
+
+    public static void post(String url, JSONObject header, JSONObject params, final OnResponse callback) {
+        RetrofitCall call = retrofit("", header).create(RetrofitCall.class);
+        RequestBody body = RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"), params.toString());
+        call.post(url, body).enqueue(new JsonCallback<JsonElement>() {
+            @Override
+            public void onSuccess(int statusCode, JSONObject jsonObject) {
+                if (callback != null) {
+                    callback.result(statusCode, jsonObject, "");
+                }
+            }
+
+            @Override
+            public void onFailed(@NonNull Call<JsonElement> call, ErrorR error) {
+                if (callback != null) {
+                    JSONObject jsonObject = null;
+                    if (!error.getContent().isEmpty()) {
+                        try {
+                            jsonObject = new JSONObject(error.getContent());
+                        } catch (Exception e) {
+                            DebugLog.logv(e);
+                            jsonObject = null;
+                        }
+                    }
+                    callback.result(error.getCode(), jsonObject, error.getContent());
+                }
+            }
+        });
     }
 
     public NetworkService(Context ctx) {
@@ -108,6 +188,10 @@ public class NetworkService extends ContextWrapper {
 
     public void cancelRequest(String tagRequest) {
         mRequestQueue.cancelAll(tagRequest);
+    }
+
+    public void get(final String url, final JSONObject headers, final OnGetResult callback) {
+        get(url, parseToHashMap(headers), "", false, callback);
     }
 
     public void get(final String url, final HashMap<String, String> headers, final OnGetResult callback) {
@@ -185,6 +269,10 @@ public class NetworkService extends ContextWrapper {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         mRequestQueue.add(stringRequest);
+    }
+
+    public void post(String url, final String body, final JSONObject headers, final OnGetResult callback) {
+        post(url, body, parseToHashMap(headers), "", false, callback);
     }
 
     public void post(String url, final String body, final HashMap<String, String> headers, final OnGetResult callback) {
@@ -265,6 +353,10 @@ public class NetworkService extends ContextWrapper {
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         mRequestQueue.add(stringRequest);
+    }
+
+    public void post(String url, final JSONObject params, final JSONObject headers, final OnGetResult callback) {
+        post(url, parseToHashMap(params), parseToHashMap(headers), callback);
     }
 
     public void post(String url, final HashMap<String, String> params, final HashMap<String, String> headers, final OnGetResult callback) {
