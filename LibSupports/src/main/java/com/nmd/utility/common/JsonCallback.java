@@ -43,7 +43,7 @@ public abstract class JsonCallback<T> implements Callback<T> {
                             onSuccess(response.code(), new JSONObject(gson));
                         } else if (gson.substring(0, 1).equals("[")) {
                             JSONObject results = new JSONObject();
-                            results.put("data", new JSONArray(gson));
+                            results.put("content", new JSONArray(gson));
                             onSuccess(response.code(), results);
                         } else {
                             onFailed(call, new ErrorR(null, response.code(), null));
