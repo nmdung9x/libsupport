@@ -753,13 +753,15 @@ public class UtilLibs {
 
 	public static String getDomainName(String url) {
 		try {
-			URI uri = new URI(url.toLowerCase());
-			String domain = uri.getHost();
-			return domain.startsWith("www.") ? domain.substring(4) : domain;
+			URL uri = new URL(url.toLowerCase());
+			String host = uri.getHost();
+			String protocol = uri.getProtocol();
+			int port = uri.getPort();
+			return protocol + "://" + host + (port > 0 ? ":" + port : "");
 		} catch (Exception e) {
 			DebugLog.logv(e);
 		}
-		return url;
+		return "";
 	}
 	
 	/**

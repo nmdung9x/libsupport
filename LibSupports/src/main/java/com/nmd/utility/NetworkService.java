@@ -32,6 +32,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -71,6 +72,10 @@ public class NetworkService extends ContextWrapper {
     }
 
     public static Retrofit retrofit(String baseUrl, @NonNull final JSONObject header, Gson gson, int timeOut) {
+        if (baseUrl.isEmpty()) {
+            DebugLog.loge("baseUrl empty");
+            return null;
+        }
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
                 .connectTimeout(timeOut, TimeUnit.MILLISECONDS)
                 .readTimeout(timeOut, TimeUnit.MILLISECONDS)
@@ -94,16 +99,11 @@ public class NetworkService extends ContextWrapper {
                     }
                 });
 
-        return baseUrl.isEmpty() ?
-                new Retrofit.Builder()
+        return new Retrofit.Builder()
+                .baseUrl(baseUrl.concat("/"))
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(httpClientBuilder.build())
-                .build() :
-                new Retrofit.Builder()
-                        .baseUrl(baseUrl.concat("/"))
-                        .addConverterFactory(GsonConverterFactory.create(gson))
-                        .client(httpClientBuilder.build())
-                        .build();
+                .build();
     }
 
     public interface RetrofitCall {
@@ -123,7 +123,13 @@ public class NetworkService extends ContextWrapper {
     }
 
     public static void get(String url, JSONObject header, final OnResponse callback) {
-        RetrofitCall call = retrofit("", header).create(RetrofitCall.class);
+        String base_url = UtilLibs.getDomainName(url);
+        if (base_url.isEmpty()) return;
+        RetrofitCall call = retrofit(base_url, header).create(RetrofitCall.class);
+        get(call, url.substring(base_url.length()), callback);
+    }
+
+    public static void get(RetrofitCall call, String url, final OnResponse callback) {
         call.get(url).enqueue(new JsonCallback<JsonElement>() {
             @Override
             public void onSuccess(int statusCode, JSONObject jsonObject) {
@@ -135,7 +141,16 @@ public class NetworkService extends ContextWrapper {
             @Override
             public void onFailed(@NonNull Call<JsonElement> call, ErrorR error) {
                 if (callback != null) {
-                    callback.result(error.getCode(), new JSONObject(), error.getContent());
+                    JSONObject jsonObject = null;
+                    if (!error.getContent().isEmpty()) {
+                        try {
+                            jsonObject = new JSONObject(error.getContent());
+                        } catch (Exception e) {
+                            DebugLog.logv(e);
+                            jsonObject = null;
+                        }
+                    }
+                    callback.result(error.getCode(), jsonObject, error.getContent());
                 }
             }
         });
@@ -146,7 +161,13 @@ public class NetworkService extends ContextWrapper {
     }
 
     public static void post(String url, JSONObject header, JSONObject params, final OnResponse callback) {
-        RetrofitCall call = retrofit("", header).create(RetrofitCall.class);
+        String base_url = UtilLibs.getDomainName(url);
+        if (base_url.isEmpty()) return;
+        RetrofitCall call = retrofit(base_url, header).create(RetrofitCall.class);
+        post(call, url.substring(base_url.length()), params, callback);
+    }
+
+    public static void post(RetrofitCall call, String url, JSONObject params, final OnResponse callback) {
         RequestBody body = RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"), params.toString());
         call.post(url, body).enqueue(new JsonCallback<JsonElement>() {
             @Override
