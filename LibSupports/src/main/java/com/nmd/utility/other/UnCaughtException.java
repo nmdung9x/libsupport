@@ -1,5 +1,19 @@
 package com.nmd.utility.other;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.os.Looper;
+import android.util.Log;
+
+import androidx.core.app.ShareCompat;
+
+import com.nmd.utility.DebugLog;
+import com.nmd.utility.UtilLibs;
+import com.nmd.utility.UtilityMain;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -10,15 +24,6 @@ import java.io.Writer;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import com.nmd.utility.DebugLog;
-import com.nmd.utility.SharedPreference;
-import com.nmd.utility.UtilLibs;
-import com.nmd.utility.UtilityMain;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.util.Log;
 
 public class UnCaughtException implements UncaughtExceptionHandler {
 
@@ -44,7 +49,6 @@ public class UnCaughtException implements UncaughtExceptionHandler {
 			printWriter.close();
 			report.append('\n');
 			report.append("**** End of current Report ***");
-			Log.e(UnCaughtException.class.getName(), "Error while sendErrorMail" + report);
 			sendErrorMail(report, e);
 		} catch (Throwable ignore) {
 			Log.e(UnCaughtException.class.getName(), "Error while sending error e-mail", ignore);
@@ -78,59 +82,47 @@ public class UnCaughtException implements UncaughtExceptionHandler {
 	/**
 	 * This method for call alert dialog when application crashed!
 	 */
-	public void sendErrorMail(final StringBuilder errorContent, Throwable e) {	
-		if(SharedPreference.get(context, UtilLibs.Keys.LIBS_SUPP_IS_APP_CRASH_0.name(), "0").equals("0")){
-			SharedPreference.set(context, UtilLibs.Keys.LIBS_SUPP_IS_APP_CRASH_0.name(), "1");
-		}else{
-			SharedPreference.set(context, UtilLibs.Keys.LIBS_SUPP_IS_APP_CRASH_1.name(), "1");
-		}
-//		if(!UtilLibs.isAppCrash0(context)){
-//			UtilLibs.hasAppCrash0(context, true);	
-//		}else{
-//			UtilLibs.hasAppCrash(context, true);			
-//		}
+	public void sendErrorMail(final StringBuilder errorContent, Throwable e) {
 		recordErrorLog(errorContent.toString());
-		System.exit(1);
-		android.os.Process.killProcess(android.os.Process.myPid());
-		
-//		final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-//		new Thread() {
-//			@Override
-//			public void run() {
-//				Looper.prepare();
-//				builder.setTitle("Sorry...!");
-//				builder.create();
-//				builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-//						@Override
-//						public void onClick(DialogInterface dialog, int which) {
-//							System.exit(0);
-//							android.os.Process.killProcess(android.os.Process.myPid()); 
-//						}
-//					});
-//				builder.setPositiveButton("Report", new DialogInterface.OnClickListener() {
-//						@Override
-//						public void onClick(DialogInterface dialog,
-//								int which) {
-//							Intent sendIntent = new Intent(Intent.ACTION_SEND);
-//							String subject = "Your App crashed! Fix it!";
-//							StringBuilder body = new StringBuilder("Yoddle");
-//							body.append('\n').append('\n');
-//							body.append(errorContent).append('\n').append('\n');
-//							// sendIntent.setType("text/plain");
-//							sendIntent.setType("message/rfc822");
-//							sendIntent.putExtra(Intent.EXTRA_EMAIL, new String[] { "dungnm@niw.com.vn" });
-//							sendIntent.putExtra(Intent.EXTRA_TEXT, body.toString());
-//							sendIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
-//							sendIntent.setType("message/rfc822");
-//							context1.startActivity(sendIntent);
-//							android.os.Process.killProcess(android.os.Process.myPid()); 
-//							System.exit(0);
-//						}
-//					});
-//				builder.setMessage("Oops,Your application has crashed");
-//				builder.show();
-//				Looper.loop();
-//			}
-//		}.start();
+		if (UtilityMain.emailsForErrorReport.length == 0) {
+			Looper.loop();
+			System.exit(0);
+		} else {
+			final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+			new Thread() {
+				@Override
+				public void run() {
+					Looper.prepare();
+					builder.setTitle("Xin lỗi...!");
+					builder.setMessage("Rất tiếc, Sapo Partner đã bị dừng đột ngột do lỗi ứng dụng.");
+					builder.create();
+					builder.setNegativeButton("Bỏ qua", new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							System.exit(0);
+						}
+					});
+					builder.setPositiveButton("Gửi lỗi", new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							String subject = "Sapo Partner crashed!";
+							StringBuilder body = new StringBuilder();
+							body.append(errorContent.toString()).append('\n').append('\n');
+
+							ShareCompat.IntentBuilder.from((Activity) context)
+									.setType("message/rfc822")
+									.addEmailTo(UtilityMain.emailsForErrorReport)
+									.setSubject(subject)
+									.setText(body)
+									.setChooserTitle("Gửi lỗi")
+									.startChooser();
+							System.exit(0);
+						}
+					});
+					builder.show();
+					Looper.loop();
+				}
+			}.start();
+		}
 	}
 }

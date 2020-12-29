@@ -21,6 +21,8 @@ public class UtilityMain {
 	public static String BUILDDAY = "";
 	public static String FULLNAME_LOG = "";
 
+	public static String[] emailsForErrorReport = new String[] {};
+
 	public static boolean DEBUG_D = true;
 	public static boolean DEBUG_E = true;
 	public static boolean DEBUG_EXCEPTION = true;
@@ -91,9 +93,14 @@ public class UtilityMain {
 			isRecordLog = check;
 			return this;
 		}
-		
+
 		public Builder setTAG(String check) {
 			TAG = check;
+			return this;
+		}
+
+		public Builder setEmailsForErrorReport(String[] emails) {
+			emailsForErrorReport = emails;
 			return this;
 		}
 		

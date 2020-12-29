@@ -83,7 +83,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.security.Key;
 import java.security.MessageDigest;
@@ -1468,7 +1467,7 @@ public class UtilLibs {
 	 * 
 	 * @return (Object) result.
 	 */
-	public static Object getValueInJsonObj(JSONObject jsonObject, String key) {
+	public static Object getObjectInJsonObj(JSONObject jsonObject, String key) {
 		if (jsonObject == null) return null;
 		if (key == null) return null;
 		if (key.trim().isEmpty()) return null;
@@ -1496,12 +1495,12 @@ public class UtilLibs {
 		if (jsonObject == null) return "";
 		if (key == null) return "";
 		if (key.trim().isEmpty()) return "";
-		Object result = getValueInJsonObj(jsonObject, key);
+		Object result = getObjectInJsonObj(jsonObject, key);
 		if (result != null) return String.valueOf(result);
 		return "";
 	}
 
-	public static ArrayList<Object> getObjectInJsonArray(JSONArray jsonArray) {
+	public static ArrayList<Object> getListObjectInJsonArray(JSONArray jsonArray) {
 		ArrayList<Object> arrayList = new ArrayList<Object>();
 		int length = jsonArray.length();
 		if (length > 0) {
@@ -1517,7 +1516,7 @@ public class UtilLibs {
 		return arrayList;
 	}
 
-	public static ArrayList<String> getStringInJsonArray(JSONArray jsonArray) {
+	public static ArrayList<String> getListStringInJsonArray(JSONArray jsonArray) {
 		ArrayList<String> arrayList = new ArrayList<String>();
 		int length = jsonArray.length();
 		if (length > 0) {
@@ -1531,6 +1530,14 @@ public class UtilLibs {
 		}
 
 		return arrayList;
+	}
+
+	public static Object getObjectInJsonArray(JSONArray jsonArray, int i) {
+		try {
+			return jsonArray.get(i);
+		} catch (JSONException e) {
+			return null;
+		}
 	}
 
 	public static String getStringInJsonArray(JSONArray jsonArray, int i) {
