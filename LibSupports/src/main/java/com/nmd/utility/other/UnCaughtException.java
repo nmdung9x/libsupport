@@ -33,6 +33,7 @@ public class UnCaughtException implements UncaughtExceptionHandler {
 		context = ctx;
 	}
 
+	@Override
 	public void uncaughtException(Thread t, Throwable e) {
 		try {
 			StringBuilder report = new StringBuilder();
@@ -85,7 +86,6 @@ public class UnCaughtException implements UncaughtExceptionHandler {
 	public void sendErrorMail(final StringBuilder errorContent, Throwable e) {
 		recordErrorLog(errorContent.toString());
 		if (UtilityMain.emailsForErrorReport.length == 0) {
-			Looper.loop();
 			System.exit(0);
 		} else {
 			final AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -94,7 +94,7 @@ public class UnCaughtException implements UncaughtExceptionHandler {
 				public void run() {
 					Looper.prepare();
 					builder.setTitle("Xin lỗi...!");
-					builder.setMessage("Rất tiếc, Sapo Partner đã bị dừng đột ngột do lỗi ứng dụng.");
+					builder.setMessage("Rất tiếc, Ứng dụng đã bị dừng đột ngột do lỗi.");
 					builder.create();
 					builder.setNegativeButton("Bỏ qua", new DialogInterface.OnClickListener() {
 						@Override
@@ -105,18 +105,23 @@ public class UnCaughtException implements UncaughtExceptionHandler {
 					builder.setPositiveButton("Gửi lỗi", new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							String subject = "Sapo Partner crashed!";
+							String subject = "Ứng dụng bị dừng!";
 							StringBuilder body = new StringBuilder();
 							body.append(errorContent.toString()).append('\n').append('\n');
 
-							ShareCompat.IntentBuilder.from((Activity) context)
-									.setType("message/rfc822")
-									.addEmailTo(UtilityMain.emailsForErrorReport)
-									.setSubject(subject)
-									.setText(body)
-									.setChooserTitle("Gửi lỗi")
-									.startChooser();
-							System.exit(0);
+							try {
+								ShareCompat.IntentBuilder.from((Activity) context)
+										.setType("message/rfc822")
+										.addEmailTo(UtilityMain.emailsForErrorReport)
+										.setSubject(subject)
+										.setText(body)
+										.setChooserTitle("Gửi lỗi")
+										.startChooser();
+							} catch (Exception e1) {
+								Log.e(UnCaughtException.class.getName(), "Error while sending error e-mail", e1);
+							} finally {
+								System.exit(0);
+							}
 						}
 					});
 					builder.show();
