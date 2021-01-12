@@ -11,7 +11,7 @@ android {
         targetSdkVersion 30
 
         versionCode 11
-        versionName "3.0.6beta1"
+        versionName "3.0.7"
     }
     buildTypes {
         release {
