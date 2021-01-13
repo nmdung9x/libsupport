@@ -2,7 +2,7 @@ package com.nmd.utility.viewbinder;
 
 public class LayoutBinder {
 
-    public static int getViewLayout(Object view) {
+    public static Integer getViewLayout(Object view) throws RuntimeException {
         Class<?> clazz = view.getClass();
         while (clazz != null) {
             Layout ano = clazz.getAnnotation(Layout.class);
@@ -12,16 +12,15 @@ public class LayoutBinder {
                 clazz = clazz.getSuperclass();
             }
         }
-        throw new RuntimeException("Must declare Layout anotation at the head of activity class");
+        return null;
     }
 
-    public static int getViewLayout(Class<?> viewClass) {
+    public static Integer getViewLayout(Class<?> viewClass) throws RuntimeException {
         Layout ano = viewClass.getAnnotation(Layout.class);
         if (ano != null) {
             return ano.value();
-        } else {
-            throw new RuntimeException("Must declare Layout anotation at the head of activity class");
         }
+        return null;
     }
 
 }
