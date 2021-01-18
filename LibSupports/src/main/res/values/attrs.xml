@@ -2,7 +2,7 @@
 <resources>
     <declare-styleable name="CustomMaterialTextView">
         <attr name="action_select" format="boolean" />
-        <attr name="drawable_selected" format="fraction" />
+        <attr name="drawable_selected" format="integer" />
         <attr name="text_padding" format="dimension" />
         <attr name="text_size" format="dimension" />
 

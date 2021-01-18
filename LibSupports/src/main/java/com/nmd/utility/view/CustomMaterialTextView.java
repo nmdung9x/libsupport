@@ -25,8 +25,8 @@ public class CustomMaterialTextView extends FrameLayout {
     Context context;
 
     FrameLayout layout_root;
-    TextInputLayout layout;
-    TextInputEditText editText;
+    public TextInputLayout layout;
+    public TextInputEditText editText;
     View view_clear;
 
     ViewActionCallback callback;
@@ -111,6 +111,7 @@ public class CustomMaterialTextView extends FrameLayout {
                         @Override
                         public void onClick(View v) {
                             setText("");
+                            editText.clearFocus();
                             if (callback != null) callback.onClear(CustomMaterialTextView.this);
                         }
                     });
