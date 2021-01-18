@@ -10,9 +10,10 @@ android {
         minSdkVersion 16
         targetSdkVersion 30
 
-        versionCode 11
-        versionName "3.0.9"
+        versionCode 12
+        versionName "3.1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -26,10 +27,12 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.legacy:legacy-support-v13:1.0.0'
 
+    implementation 'com.google.android.material:material:1.2.1'
+
     implementation 'com.nineoldandroids:library:2.4.0'
     implementation 'com.android.volley:volley:1.1.1'
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
 
     implementation 'org.projectlombok:lombok:1.18.12'
