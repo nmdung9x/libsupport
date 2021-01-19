@@ -8,6 +8,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -63,6 +64,7 @@ public class CustomMaterialTextView extends FrameLayout {
             int lines = type.getInt(R.styleable.CustomMaterialTextView_android_lines, 0);
             int maxLines = type.getInt(R.styleable.CustomMaterialTextView_android_maxLines, 0);
             int nextFocusDown = type.getInt(R.styleable.CustomMaterialTextView_android_nextFocusDown, -1);
+            int gravity = type.getInt(R.styleable.CustomMaterialTextView_android_gravity, Gravity.NO_GRAVITY);
 
             if (initView()) {
                 layout.setHint(hint);
@@ -82,6 +84,8 @@ public class CustomMaterialTextView extends FrameLayout {
                 if (maxLines > 0) editText.setMaxLines(maxLines);
 
                 if (nextFocusDown != -1) editText.setNextFocusDownId(nextFocusDown);
+
+                if (gravity != Gravity.NO_GRAVITY) editText.setGravity(gravity);
 
                 if (icon != null) {
                     layout.setEndIconDrawable(icon);
@@ -150,8 +154,6 @@ public class CustomMaterialTextView extends FrameLayout {
         } finally {
             type.recycle();
         }
-
-
     }
 
     private boolean initView() {

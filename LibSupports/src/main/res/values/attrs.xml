@@ -5,6 +5,7 @@
         <attr name="drawable_selected" format="integer" />
         <attr name="text_padding" format="dimension" />
         <attr name="text_size" format="dimension" />
+        <attr name="text_gravity" format="dimension" />
 
         <attr name="android:text"/>
         <attr name="android:hint"/>
@@ -15,5 +16,6 @@
         <attr name="android:maxLines"/>
         <attr name="android:nextFocusDown"/>
         <attr name="android:textColor"/>
+        <attr name="android:gravity" />
     </declare-styleable>
 </resources>
