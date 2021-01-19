@@ -46,7 +46,28 @@ public class CustomMaterialTextView extends FrameLayout {
     public CustomMaterialTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.context = context;
+        setAttributes(attrs);
+    }
 
+    public CustomMaterialTextView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        this.context = context;
+        setAttributes(attrs);
+    }
+
+    private boolean initView() {
+        View viewRoot = LayoutInflater.from(context).inflate(R.layout.view_material_custom, null);
+        addView(viewRoot);
+
+        layout_root = viewRoot.findViewById(R.id.v_root);
+        layout = viewRoot.findViewById(R.id.ti_layout);
+        editText = viewRoot.findViewById(R.id.ti_et_view);
+        view_clear = viewRoot.findViewById(R.id.v_clear);
+
+        return true;
+    }
+
+    private void setAttributes(AttributeSet attrs) {
         TypedArray type = context.getTheme().obtainStyledAttributes(attrs, R.styleable.CustomMaterialTextView, 0, 0);
 
         try {
@@ -77,7 +98,7 @@ public class CustomMaterialTextView extends FrameLayout {
                 editText.setText(text);
                 editText.setTextColor(textColor);
 
-                if (textSize > 0) {
+                if (textSize > 0 && type.hasValue(R.styleable.CustomMaterialTextView_textSize)) {
                     editText.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
                 }
 
@@ -91,14 +112,14 @@ public class CustomMaterialTextView extends FrameLayout {
 
                 editText.setImeOptions(imeOptions);
 
-                if (inputType != TYPE_NULL) editText.setInputType(inputType);
+                if (inputType != TYPE_NULL && type.hasValue(R.styleable.CustomMaterialTextView_android_inputType)) editText.setInputType(inputType);
 
-                if (lines > 0) editText.setLines(lines);
-                if (maxLines > 0) editText.setMaxLines(maxLines);
+                if (lines > 0 && type.hasValue(R.styleable.CustomMaterialTextView_android_lines)) editText.setLines(lines);
+                if (maxLines > 0 && type.hasValue(R.styleable.CustomMaterialTextView_android_maxLines)) editText.setMaxLines(maxLines);
 
                 if (nextFocusDown != -1) editText.setNextFocusDownId(nextFocusDown);
 
-                if (gravity != Gravity.NO_GRAVITY) editText.setGravity(gravity);
+                if (gravity != Gravity.NO_GRAVITY && type.hasValue(R.styleable.CustomMaterialTextView_android_gravity)) editText.setGravity(gravity);
 
                 if (icon != null) {
                     layout.setEndIconDrawable(icon);
@@ -171,18 +192,6 @@ public class CustomMaterialTextView extends FrameLayout {
         } finally {
             type.recycle();
         }
-    }
-
-    private boolean initView() {
-        View viewRoot = LayoutInflater.from(context).inflate(R.layout.view_material_custom, null);
-        addView(viewRoot);
-
-        layout_root = viewRoot.findViewById(R.id.v_root);
-        layout = viewRoot.findViewById(R.id.ti_layout);
-        editText = viewRoot.findViewById(R.id.ti_et_view);
-        view_clear = viewRoot.findViewById(R.id.v_clear);
-
-        return true;
     }
 
     public void setViewActionCallback(ViewActionCallback callback) {
