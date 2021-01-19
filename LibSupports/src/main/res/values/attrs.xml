@@ -4,6 +4,10 @@
         <attr name="action_select" format="boolean" />
         <attr name="drawable_selected" format="integer" />
         <attr name="text_padding" format="dimension" />
+        <attr name="text_padding_top" format="dimension" />
+        <attr name="text_padding_right" format="dimension" />
+        <attr name="text_padding_bottom" format="dimension" />
+        <attr name="text_padding_left" format="dimension" />
         <attr name="text_size" format="dimension" />
         <attr name="text_gravity" format="dimension" />
 

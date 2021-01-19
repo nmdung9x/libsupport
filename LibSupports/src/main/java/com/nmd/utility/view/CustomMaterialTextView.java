@@ -53,7 +53,12 @@ public class CustomMaterialTextView extends FrameLayout {
             boolean select = type.getBoolean(R.styleable.CustomMaterialTextView_action_select, false);
             final Drawable icon = type.getDrawable(R.styleable.CustomMaterialTextView_android_drawable);
             final Drawable iconSelected = type.getDrawable(R.styleable.CustomMaterialTextView_drawable_selected);
+
             int padding = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_padding, 0);
+            int paddingTop = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_padding_top, 0);
+            int paddingBottom = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_padding_bottom, 0);
+            int paddingLeft = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_padding_left, 0);
+            int paddingRight = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_padding_right, 0);
 
             String text = type.getString(R.styleable.CustomMaterialTextView_android_text);
             String hint = type.getString(R.styleable.CustomMaterialTextView_android_hint);
@@ -75,7 +80,14 @@ public class CustomMaterialTextView extends FrameLayout {
                     editText.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
                 }
 
-                editText.setPadding(padding, 0, padding, 0);
+                if (padding > 0) {
+                    editText.setPadding(padding, padding, padding, padding);
+                } else {
+                    if (paddingLeft > 0 || paddingTop > 0 || paddingRight > 0 || paddingBottom > 0) {
+                        editText.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom);
+                    }
+                }
+
                 editText.setImeOptions(imeOptions);
 
                 if (inputType != TYPE_NULL) editText.setInputType(inputType);
