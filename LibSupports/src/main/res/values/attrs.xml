@@ -6,9 +6,9 @@
         <attr name="drawableStart" format="integer" />
         <attr name="textPadding" format="dimension" />
         <attr name="textPaddingTop" format="dimension" />
-        <attr name="textPaddingRight" format="dimension" />
         <attr name="textPaddingBottom" format="dimension" />
-        <attr name="textPaddingLeft" format="dimension" />
+        <attr name="textPaddingStart" format="dimension" />
+        <attr name="textPaddingEnd" format="dimension" />
         <attr name="textSize" format="dimension" />
         <attr name="textGravity" format="dimension" />
 
