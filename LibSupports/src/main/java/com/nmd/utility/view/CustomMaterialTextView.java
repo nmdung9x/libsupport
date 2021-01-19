@@ -49,12 +49,6 @@ public class CustomMaterialTextView extends FrameLayout {
         setAttributes(attrs);
     }
 
-    public CustomMaterialTextView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        this.context = context;
-        setAttributes(attrs);
-    }
-
     private boolean initView() {
         View viewRoot = LayoutInflater.from(context).inflate(R.layout.view_material_custom, null);
         addView(viewRoot);
@@ -158,7 +152,7 @@ public class CustomMaterialTextView extends FrameLayout {
                             if (icon != null) {
                                 layout.setEndIconDrawable(icon);
                                 layout.setEndIconMode(END_ICON_CUSTOM);
-                            }
+                            } else DebugLog.logi("icon == null");
                             if (callback != null) callback.onClear(CustomMaterialTextView.this);
                         }
                     });
@@ -181,7 +175,7 @@ public class CustomMaterialTextView extends FrameLayout {
                                     layout.setEndIconDrawable(iconSelected);
                                     layout.setEndIconMode(END_ICON_CUSTOM);
                                     view_clear.setVisibility(View.VISIBLE);
-                                }
+                                } else DebugLog.logi("iconSelected == null");
                             }
                         }
                     });
