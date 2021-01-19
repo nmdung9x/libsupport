@@ -25,10 +25,10 @@ import static com.google.android.material.textfield.TextInputLayout.END_ICON_CUS
 public class CustomMaterialTextView extends FrameLayout {
     Context context;
 
-    FrameLayout layout_root;
+    public FrameLayout layout_root;
     public TextInputLayout layout;
     public TextInputEditText editText;
-    View view_clear;
+    public View view_clear;
 
     ViewActionCallback callback;
 
@@ -50,20 +50,21 @@ public class CustomMaterialTextView extends FrameLayout {
         TypedArray type = context.getTheme().obtainStyledAttributes(attrs, R.styleable.CustomMaterialTextView, 0, 0);
 
         try {
-            boolean select = type.getBoolean(R.styleable.CustomMaterialTextView_action_select, false);
+            boolean select = type.getBoolean(R.styleable.CustomMaterialTextView_actionSelect, false);
             final Drawable icon = type.getDrawable(R.styleable.CustomMaterialTextView_android_drawable);
-            final Drawable iconSelected = type.getDrawable(R.styleable.CustomMaterialTextView_drawable_selected);
+            final Drawable iconSelected = type.getDrawable(R.styleable.CustomMaterialTextView_drawableSelected);
+            final Drawable iconStart = type.getDrawable(R.styleable.CustomMaterialTextView_drawableStart);
 
-            int padding = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_padding, 0);
-            int paddingTop = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_padding_top, 0);
-            int paddingBottom = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_padding_bottom, 0);
-            int paddingLeft = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_padding_left, 0);
-            int paddingRight = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_padding_right, 0);
+            int padding = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_textPadding, 0);
+            int paddingTop = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_textPaddingTop, 0);
+            int paddingBottom = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_textPaddingBottom, 0);
+            int paddingLeft = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_textPaddingLeft, 0);
+            int paddingRight = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_textPaddingRight, 0);
 
             String text = type.getString(R.styleable.CustomMaterialTextView_android_text);
             String hint = type.getString(R.styleable.CustomMaterialTextView_android_hint);
             int textColor = type.getColor(R.styleable.CustomMaterialTextView_android_textColor, Color.BLACK);
-            int textSize = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_text_size, 0);
+            int textSize = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_textSize, 0);
             int imeOptions = type.getInt(R.styleable.CustomMaterialTextView_android_imeOptions, IME_ACTION_NONE);
             int inputType = type.getInt(R.styleable.CustomMaterialTextView_android_inputType, TYPE_NULL);
             int lines = type.getInt(R.styleable.CustomMaterialTextView_android_lines, 0);
@@ -104,6 +105,10 @@ public class CustomMaterialTextView extends FrameLayout {
                     layout.setEndIconMode(END_ICON_CUSTOM);
                 }
 
+                if (iconStart != null) {
+                    layout.setStartIconDrawable(iconStart);
+                }
+
                 if (select) {
                     editText.setOnFocusChangeListener(new OnFocusChangeListener() {
                         @Override
@@ -128,6 +133,10 @@ public class CustomMaterialTextView extends FrameLayout {
                         public void onClick(View v) {
                             setText("");
                             editText.clearFocus();
+                            if (icon != null) {
+                                layout.setEndIconDrawable(icon);
+                                layout.setEndIconMode(END_ICON_CUSTOM);
+                            }
                             if (callback != null) callback.onClear(CustomMaterialTextView.this);
                         }
                     });
@@ -146,12 +155,7 @@ public class CustomMaterialTextView extends FrameLayout {
                         @Override
                         public void afterTextChanged(Editable s) {
                             view_clear.setVisibility(editText.getText().toString().isEmpty() ? View.GONE : View.VISIBLE);
-                            if (editText.getText().toString().isEmpty()) {
-                                if (icon != null) {
-                                    layout.setEndIconDrawable(icon);
-                                    layout.setEndIconMode(END_ICON_CUSTOM);
-                                }
-                            } else {
+                            if (editText.getText().toString().length() > 0) {
                                 if (iconSelected != null) {
                                     layout.setEndIconDrawable(iconSelected);
                                     layout.setEndIconMode(END_ICON_CUSTOM);

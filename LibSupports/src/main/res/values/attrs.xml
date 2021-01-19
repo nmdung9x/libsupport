@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="CustomMaterialTextView">
-        <attr name="action_select" format="boolean" />
-        <attr name="drawable_selected" format="integer" />
-        <attr name="text_padding" format="dimension" />
-        <attr name="text_padding_top" format="dimension" />
-        <attr name="text_padding_right" format="dimension" />
-        <attr name="text_padding_bottom" format="dimension" />
-        <attr name="text_padding_left" format="dimension" />
-        <attr name="text_size" format="dimension" />
-        <attr name="text_gravity" format="dimension" />
+        <attr name="actionSelect" format="boolean" />
+        <attr name="drawableSelected" format="integer" />
+        <attr name="drawableStart" format="integer" />
+        <attr name="textPadding" format="dimension" />
+        <attr name="textPaddingTop" format="dimension" />
+        <attr name="textPaddingRight" format="dimension" />
+        <attr name="textPaddingBottom" format="dimension" />
+        <attr name="textPaddingLeft" format="dimension" />
+        <attr name="textSize" format="dimension" />
+        <attr name="textGravity" format="dimension" />
 
         <attr name="android:text"/>
         <attr name="android:hint"/>
