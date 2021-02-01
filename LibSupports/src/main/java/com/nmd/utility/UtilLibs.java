@@ -2222,59 +2222,90 @@ public class UtilLibs {
 		return data.replaceAll("đ", "d");
 	}
 
-	public static int checkIntValue(String data) {
-		int result = 0;
-		if (!data.equals("")) {
-			try {
-				result = Integer.parseInt(data);
-			} catch (Exception e) {
-			}
-		}
-		return result;
+	//TODO for old version
+	public static int checkIntValue(Object data) {
+		return parseInt(data);
 	}
 
-	public static float checkFloatValue(String data) {
-		float result = 0;
-		if (!data.equals("")) {
-			try {
-				result = Float.parseFloat(data);
-			} catch (Exception e) {
-			}
-		}
-		return result;
+	public static int parseInt(Object data) {
+		return parseInt(data, 0);
 	}
 
-	public static long checkLongValue(String data) {
-		long result = 0;
-		if (!data.equals("")) {
-			try {
-				result = Long.parseLong(data);
-			} catch (Exception e) {
-			}
+	public static int parseInt(Object data, int default_value) {
+		try {
+			return Integer.parseInt(String.valueOf(data));
+		} catch (Exception e) {
+			DebugLog.logi(e);
 		}
-		return result;
+		return default_value;
 	}
 
-	public static double checkDoubleValue(String data) {
-		double result = 0;
-		if (!data.equals("")) {
-			try {
-				result = Double.parseDouble(data);
-			} catch (Exception e) {
-			}
-		}
-		return result;
+	//TODO for old version
+	public static float checkFloatValue(Object data) {
+		return parseFloat(data);
 	}
 
-	public static boolean checkBooleanValue(String data) {
-		boolean result = false;
-		if (!data.equals("")) {
-			try {
-				result = Boolean.parseBoolean(data);
-			} catch (Exception e) {
-			}
+	public static float parseFloat(Object data) {
+		return parseFloat(data, 0);
+	}
+
+	public static float parseFloat(Object data, float default_value) {
+		try {
+			return Float.parseFloat(String.valueOf(data));
+		} catch (Exception e) {
+			DebugLog.logi(e);
 		}
-		return result;
+		return default_value;
+	}
+
+	//TODO for old version
+	public static long checkLongValue(Object data) {
+		return parseLong(data);
+	}
+
+	public static long parseLong(Object data) {
+		return parseLong(data, 0);
+	}
+
+	public static long parseLong(Object data, long default_value) {
+		try {
+			return Long.parseLong(String.valueOf(data));
+		} catch (Exception e) {
+			DebugLog.logi(e);
+		}
+		return default_value;
+	}
+
+	//TODO for old version
+	public static double checkDoubleValue(Object data) {
+		return parseDouble(data);
+	}
+
+	public static double parseDouble(Object data) {
+		return parseDouble(data, 0);
+	}
+
+	public static double parseDouble(Object data, double default_value) {
+		try {
+			return Double.parseDouble(String.valueOf(data));
+		} catch (Exception e) {
+			DebugLog.logi(e);
+		}
+		return default_value;
+	}
+
+	//TODO for old version
+	public static boolean checkBooleanValue(Object data) {
+		return parseBoolean(data);
+	}
+
+	public static boolean parseBoolean(Object data) {
+		try {
+			return Boolean.parseBoolean(String.valueOf(data));
+		} catch (Exception e) {
+			DebugLog.logi(e);
+		}
+		return false;
 	}
 
 	public static void setScrollEditext(Context context, final EditText editText) {

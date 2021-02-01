@@ -300,6 +300,17 @@ public class JsonUtils {
     }
 
     //TODO ======================== NEW ========================
+    
+    public static ArrayList<String> getListKeyInJson(JSONObject jsonObject) {
+        ArrayList<String> arrayList = new ArrayList<String>();
+        if (jsonObject != null) {
+            Iterator<String> keys = jsonObject.keys();
+            while(keys.hasNext()) {
+                arrayList.add( keys.next());
+            }
+        }
+        return arrayList;
+    }
 
     public static <T> Object toObject(String s, Class<T> t) {
         if (s != null) {
