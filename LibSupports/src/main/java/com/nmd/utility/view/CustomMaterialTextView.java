@@ -29,6 +29,8 @@ public class CustomMaterialTextView extends FrameLayout {
     public TextInputLayout layout;
     public TextInputEditText editText;
     public View view_clear;
+    public boolean select = false;
+    public Drawable icon;
 
     ViewActionCallback callback;
 
@@ -65,8 +67,8 @@ public class CustomMaterialTextView extends FrameLayout {
         TypedArray type = context.getTheme().obtainStyledAttributes(attrs, R.styleable.CustomMaterialTextView, 0, 0);
 
         try {
-            boolean select = type.getBoolean(R.styleable.CustomMaterialTextView_actionSelect, false);
-            final Drawable icon = type.getDrawable(R.styleable.CustomMaterialTextView_android_drawable);
+            select = type.getBoolean(R.styleable.CustomMaterialTextView_actionSelect, false);
+            icon = type.getDrawable(R.styleable.CustomMaterialTextView_android_drawable);
             final Drawable iconSelected = type.getDrawable(R.styleable.CustomMaterialTextView_drawableSelected);
             final Drawable iconStart = type.getDrawable(R.styleable.CustomMaterialTextView_drawableStart);
 
@@ -146,14 +148,7 @@ public class CustomMaterialTextView extends FrameLayout {
                     view_clear.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            setText("");
-                            editText.clearFocus();
-                            view_clear.setVisibility(View.GONE);
-                            if (icon != null) {
-                                layout.setEndIconDrawable(icon);
-                                layout.setEndIconMode(END_ICON_CUSTOM);
-                            } else DebugLog.logi("icon == null");
-                            if (callback != null) callback.onClear(CustomMaterialTextView.this);
+                            clear();
                         }
                     });
 
@@ -206,5 +201,16 @@ public class CustomMaterialTextView extends FrameLayout {
 
     public String getText() {
         return editText != null ? editText.getText().toString() : "";
+    }
+
+    public void clear() {
+        setText("");
+        if (editText != null) editText.clearFocus();
+        if (view_clear != null) view_clear.setVisibility(View.GONE);
+        if (icon != null && layout != null) {
+            layout.setEndIconDrawable(icon);
+            layout.setEndIconMode(END_ICON_CUSTOM);
+        }
+        if (callback != null) callback.onClear(CustomMaterialTextView.this);
     }
 }
