@@ -80,7 +80,7 @@ public abstract class JsonCallback<T> implements Callback<T> {
 
     private void log(Call<T> call, int statusCode) {
         DebugLog.logn(call.request().method() + " : "+call.request().url().toString() + " [" + statusCode + "]");
-        if (call.request().method().toLowerCase().equals("post")) {
+        if (!call.request().method().toLowerCase().equals("get") && !call.request().method().toLowerCase().equals("delete")) {
             DebugLog.logn("[Request Body] "+bodyToString(call.request().body()));
         }
     }

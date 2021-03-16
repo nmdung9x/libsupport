@@ -28,6 +28,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -93,6 +94,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
@@ -2579,6 +2581,39 @@ public class UtilLibs {
 			DebugLog.loge(e);
 			textView.setText(origin);
 		}
+	}
+
+	public static void startActivity(Activity activity, Class<?> cls, JSONObject data) {
+		startActivity(activity, cls, data, null);
+	}
+
+	public static void startActivity(Activity activity, Class<?> cls, JSONObject data, Integer requestCode) {
+		Intent intent = new Intent(activity, cls);
+		if (data != null) {
+			Bundle bundle = new Bundle();
+			Iterator<String> keys = data.keys();
+			while(keys.hasNext()) {
+				String key = keys.next();
+				bundle.putString(key, JsonUtils.getStringInJsonObj(data, key));
+			}
+			intent.putExtras(bundle);
+		}
+
+		if (requestCode != null) {
+			activity.startActivityForResult(intent, requestCode);
+		} else {
+			activity.startActivity(intent);
+		}
+	}
+
+	public static String getBundleData(Activity activity, String key) {
+		Bundle bundle = activity.getIntent().getExtras();
+		if (bundle != null) {
+			if (bundle.get(key) != null) {
+				return String.valueOf(bundle.get(key));
+			}
+		}
+		return "";
 	}
 
 }
