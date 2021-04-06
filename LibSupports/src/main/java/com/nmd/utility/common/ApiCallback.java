@@ -11,11 +11,11 @@ import retrofit2.Call;
 import retrofit2.Callback;
 
 public abstract class ApiCallback<T> implements Callback<T> {
-    abstract public void onResponse(Call<T> call, boolean isSuccess, int statusCode, String responseText, @Nullable String requestText, String requestUrl, Throwable t, boolean isCancelled);
+    abstract public void onResponse(Call<T> call, boolean isSuccess, int statusCode, String responseText, @Nullable String requestText, String requestUrl, ErrorR error, boolean isCancelled);
 
     @Override
     public void onResponse(@NonNull Call<T> call, @NonNull retrofit2.Response<T> response) {
-        log(call);
+        log(call, response.code());
         String responseText = "";
         if (response.body() != null) {
             responseText = response.body().toString();
@@ -29,18 +29,18 @@ public abstract class ApiCallback<T> implements Callback<T> {
                 }
             }
         }
-        onResponse(call, response.isSuccessful(), response.code(), responseText, bodyToString(call.request().body()), call.request().url().toString(), null, call.isCanceled());
+        onResponse(call, response.isSuccessful(), response.code(), responseText, bodyToString(call.request().body()), call.request().url().toString(), new ErrorR(response.errorBody(), response.code(), null), call.isCanceled());
     }
 
     @Override
     public void onFailure(@NonNull Call<T> call, @NonNull Throwable t) {
-        log(call);
+        log(call, -1);
 
-        onResponse(call, false, -1, "", bodyToString(call.request().body()), call.request().url().toString(), t, call.isCanceled());
+        onResponse(call, false, -1, "", bodyToString(call.request().body()), call.request().url().toString(), new ErrorR("", -1, t), call.isCanceled());
     }
 
-    private void log(Call<T> call) {
-        DebugLog.logn(call.request().method() + " : "+call.request().url().toString());
+    private void log(Call<T> call, int statusCode) {
+        DebugLog.logn(call.request().method() + " : "+call.request().url().toString() + " [" + statusCode + "]");
         if (call.request().body() != null) {
             DebugLog.logn("[Request Body] "+bodyToString(call.request().body()));
         }

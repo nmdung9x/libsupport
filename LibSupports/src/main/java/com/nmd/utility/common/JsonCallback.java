@@ -46,14 +46,14 @@ public abstract class JsonCallback<T> implements Callback<T> {
                             results.put("content", new JSONArray(gson));
                             onSuccess(response.code(), results);
                         } else {
-                            onFailed(call, new ErrorR(null, response.code(), null));
+                            onFailed(call, new ErrorR("", response.code(), null));
                         }
                     } else {
-                        onFailed(call, new ErrorR(null, response.code(), null));
+                        onFailed(call, new ErrorR("", response.code(), null));
                     }
                 } catch (Exception e) {
                     DebugLog.loge(e);
-                    onFailed(call, new ErrorR(null, response.code(), e));
+                    onFailed(call, new ErrorR("", response.code(), e));
                 }
             } else {
                 onSuccess(response.code(), null);
@@ -71,7 +71,7 @@ public abstract class JsonCallback<T> implements Callback<T> {
             return;
         }
         log(call, -1);
-        onFailed(call, new ErrorR(null, -1, t));
+        onFailed(call, new ErrorR("", -1, t));
     }
 
     private void logCancelledCall(Call<T> call) {

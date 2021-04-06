@@ -14,6 +14,13 @@ public class ErrorR {
     private int code;
     private Throwable t;
 
+
+    public ErrorR(String content, int code, Throwable t) {
+        this.content = content;
+        this.code = code;
+        this.t = t;
+    }
+
     public ErrorR(ResponseBody body, int code, Throwable t) {
         this.body = body;
         this.code = code;
