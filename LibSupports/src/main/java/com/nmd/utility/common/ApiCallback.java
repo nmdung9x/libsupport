@@ -1,7 +1,7 @@
 package com.nmd.utility.common;
 
-import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.nmd.utility.DebugLog;
 
@@ -11,51 +11,41 @@ import retrofit2.Call;
 import retrofit2.Callback;
 
 public abstract class ApiCallback<T> implements Callback<T> {
-    abstract public void onSuccess(Call<T> call, T responseBody);
-
-    abstract public void onFailed(Call<T> call, ErrorR error);
-
-    @SuppressWarnings("WeakerAccess")
-    @CallSuper
-    public void onCancelled(Call<T> call) {
-        logCancelledCall(call);
-    }
+    abstract public void onResponse(Call<T> call, boolean isSuccess, int statusCode, String responseText, @Nullable String requestText, String requestUrl, Throwable t, boolean isCancelled);
 
     @Override
     public void onResponse(@NonNull Call<T> call, @NonNull retrofit2.Response<T> response) {
         log(call);
-        if (call.isCanceled()) {
-            onCancelled(call);
-            return;
+        String responseText = "";
+        if (response.body() != null) {
+            responseText = response.body().toString();
+        } else {
+            if (response.errorBody() != null) {
+                try {
+                    responseText = response.errorBody().string();
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                    responseText = "";
+                }
+            }
         }
-
-        if (response.isSuccessful()) {
-            onSuccess(call, response.body());
-            return;
-        }
-
-        onFailed(call, new ErrorR(response.errorBody(), response.code(), null));
+        onResponse(call, response.isSuccessful(), response.code(), responseText, bodyToString(call.request().body()), call.request().url().toString(), null, call.isCanceled());
     }
 
     @Override
     public void onFailure(@NonNull Call<T> call, @NonNull Throwable t) {
         log(call);
-        if (call.isCanceled()) {
-            onCancelled(call);
-            return;
-        }
 
-        onFailed(call, new ErrorR(null, 0, t));
-    }
-
-    private void logCancelledCall(Call<T> call) {
-        DebugLog.loge(call.request().method() + " " + call.request().url() + " cancelled");
+        onResponse(call, false, -1, "", bodyToString(call.request().body()), call.request().url().toString(), t, call.isCanceled());
     }
 
     private void log(Call<T> call) {
         DebugLog.logn(call.request().method() + " : "+call.request().url().toString());
-        if (call.request().method().toLowerCase().equals("post")) {
+        if (call.request().body() != null) {
             DebugLog.logn("[Request Body] "+bodyToString(call.request().body()));
+        }
+        if (call.isCanceled()) {
+            DebugLog.logn("[!!! CANCELLED !!!]");
         }
     }
 
@@ -69,7 +59,7 @@ public abstract class ApiCallback<T> implements Callback<T> {
                 return "";
             return buffer.readUtf8();
         } catch (final Exception e) {
-            return "did not work";
+            return "";
         }
     }
 }
