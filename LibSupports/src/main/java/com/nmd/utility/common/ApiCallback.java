@@ -22,7 +22,6 @@ public abstract class ApiCallback<T> implements Callback<T> {
     @Override
     public void onFailure(@NonNull Call<T> call, @NonNull Throwable t) {
         log(call, -1);
-
         onResponse(call, false, -1, null, bodyToString(call.request().body()), call.request().url().toString(), new ErrorR("", -1, t), call.isCanceled());
     }
 

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -18,9 +19,8 @@ import com.android.volley.toolbox.Volley;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
+import com.nmd.utility.common.ApiCallback;
 import com.nmd.utility.common.ErrorR;
-import com.nmd.utility.common.JsonCallback;
 import com.nmd.utility.other.MultipartRequest;
 
 import org.json.JSONObject;
@@ -32,7 +32,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -41,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -108,10 +108,10 @@ public class NetworkService extends ContextWrapper {
 
     public interface RetrofitCall {
         @GET
-        Call<JsonElement> get(@Url String url);
+        Call<ResponseBody> get(@Url String url);
 
         @POST
-        Call<JsonElement> post(@Url String url, @Body RequestBody body);
+        Call<ResponseBody> post(@Url String url, @Body RequestBody body);
     }
 
     public interface OnResponse {
@@ -130,27 +130,17 @@ public class NetworkService extends ContextWrapper {
     }
 
     public static void get(RetrofitCall call, String url, final OnResponse callback) {
-        call.get(url).enqueue(new JsonCallback<JsonElement>() {
+        call.get(url).enqueue(new ApiCallback<ResponseBody>() {
             @Override
-            public void onSuccess(int statusCode, JSONObject jsonObject) {
-                if (callback != null) {
-                    callback.result(statusCode, jsonObject, "");
+            public void onResponse(Call<ResponseBody> call, boolean isSuccess, int statusCode, ResponseBody response, @Nullable String requestText, String requestUrl, ErrorR error, boolean isCancelled) {
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    if (response != null) jsonObject = new JSONObject(response.string());
+                } catch (Exception e) {
+                    DebugLog.loge(e);
                 }
-            }
-
-            @Override
-            public void onFailed(@NonNull Call<JsonElement> call, ErrorR error) {
                 if (callback != null) {
-                    JSONObject jsonObject = null;
-                    if (!error.getContent().isEmpty()) {
-                        try {
-                            jsonObject = new JSONObject(error.getContent());
-                        } catch (Exception e) {
-                            DebugLog.logv(e);
-                            jsonObject = null;
-                        }
-                    }
-                    callback.result(error.getCode(), jsonObject, error.getContent());
+                    callback.result(statusCode, jsonObject, error.getContent());
                 }
             }
         });
@@ -169,27 +159,17 @@ public class NetworkService extends ContextWrapper {
 
     public static void post(RetrofitCall call, String url, JSONObject params, final OnResponse callback) {
         RequestBody body = RequestBody.create(okhttp3.MediaType.parse("application/json; charset=utf-8"), params.toString());
-        call.post(url, body).enqueue(new JsonCallback<JsonElement>() {
+        call.post(url, body).enqueue(new ApiCallback<ResponseBody>() {
             @Override
-            public void onSuccess(int statusCode, JSONObject jsonObject) {
-                if (callback != null) {
-                    callback.result(statusCode, jsonObject, "");
+            public void onResponse(Call<ResponseBody> call, boolean isSuccess, int statusCode, ResponseBody response, @Nullable String requestText, String requestUrl, ErrorR error, boolean isCancelled) {
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    if (response != null) jsonObject = new JSONObject(response.string());
+                } catch (Exception e) {
+                    DebugLog.loge(e);
                 }
-            }
-
-            @Override
-            public void onFailed(@NonNull Call<JsonElement> call, ErrorR error) {
                 if (callback != null) {
-                    JSONObject jsonObject = null;
-                    if (!error.getContent().isEmpty()) {
-                        try {
-                            jsonObject = new JSONObject(error.getContent());
-                        } catch (Exception e) {
-                            DebugLog.logv(e);
-                            jsonObject = null;
-                        }
-                    }
-                    callback.result(error.getCode(), jsonObject, error.getContent());
+                    callback.result(statusCode, jsonObject, error.getContent());
                 }
             }
         });
