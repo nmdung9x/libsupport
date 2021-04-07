@@ -135,7 +135,11 @@ public class NetworkService extends ContextWrapper {
             public void onResponse(Call<ResponseBody> call, boolean isSuccess, int statusCode, ResponseBody response, @Nullable String requestText, String requestUrl, ErrorR error, boolean isCancelled) {
                 JSONObject jsonObject = new JSONObject();
                 try {
-                    if (response != null) jsonObject = new JSONObject(response.string());
+                    if (response != null) {
+                        if (!response.string().isEmpty()) {
+                            jsonObject = new JSONObject(response.string());
+                        }
+                    }
                 } catch (Exception e) {
                     DebugLog.loge(e);
                 }
@@ -164,7 +168,11 @@ public class NetworkService extends ContextWrapper {
             public void onResponse(Call<ResponseBody> call, boolean isSuccess, int statusCode, ResponseBody response, @Nullable String requestText, String requestUrl, ErrorR error, boolean isCancelled) {
                 JSONObject jsonObject = new JSONObject();
                 try {
-                    if (response != null) jsonObject = new JSONObject(response.string());
+                    if (response != null) {
+                        if (!response.string().isEmpty()) {
+                            jsonObject = new JSONObject(response.string());
+                        }
+                    }
                 } catch (Exception e) {
                     DebugLog.loge(e);
                 }

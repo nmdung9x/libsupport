@@ -4,12 +4,14 @@ import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.nmd.utility.DebugLog;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import okio.Buffer;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -36,7 +38,14 @@ public abstract class JsonCallback<T> implements Callback<T> {
         if (response.isSuccessful()) {
             if (response.body() != null) {
                 try {
-                    String gson = new Gson().toJson(response.body());
+                    String gson;
+                    if (response.body() instanceof JsonElement) {
+                        gson = new Gson().toJson(response.body());
+                    } else if (response.body() instanceof ResponseBody) {
+                        gson = ((ResponseBody) response.body()).string();
+                    } else {
+                        gson = response.body().toString();
+                    }
                     DebugLog.logn(gson);
                     if (gson.length() > 1) {
                         if (gson.substring(0, 1).equals("{")) {
