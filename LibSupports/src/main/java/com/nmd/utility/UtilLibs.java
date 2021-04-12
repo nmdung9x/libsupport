@@ -20,6 +20,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.icu.text.DecimalFormat;
 import android.media.AudioManager;
 import android.media.ExifInterface;
@@ -61,7 +62,11 @@ import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.ColorRes;
+import androidx.annotation.DrawableRes;
 import androidx.annotation.RequiresPermission;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.nmd.utility.other.Data;
 import com.nmd.utility.other.ResizeHeightAnimation;
@@ -2616,4 +2621,12 @@ public class UtilLibs {
 		return "";
 	}
 
+	@ColorInt
+	public static int getColor(Context context, @ColorRes int id) {
+		return ResourcesCompat.getColor(context.getResources(), id, context.getTheme());
+	}
+
+	public static Drawable getDrawable(Context context, @DrawableRes int id) {
+		return ResourcesCompat.getDrawable(context.getResources(), id, context.getTheme());
+	}
 }

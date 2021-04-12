@@ -133,15 +133,23 @@ public class NetworkService extends ContextWrapper {
         call.get(url).enqueue(new ApiCallback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, boolean isSuccess, int statusCode, ResponseBody response, @Nullable String requestText, String requestUrl, ErrorR error, boolean isCancelled) {
+                String responseText = null;
                 JSONObject jsonObject = new JSONObject();
                 try {
                     if (response != null) {
-                        if (!response.string().isEmpty()) {
-                            jsonObject = new JSONObject(response.string());
-                        }
+                        responseText = response.string();
                     }
                 } catch (Exception e) {
                     DebugLog.loge(e);
+                }
+                if (responseText == null) responseText = "";
+                if (!responseText.isEmpty()) {
+                    try {
+                        jsonObject = new JSONObject(responseText);
+                    } catch (Exception e) {
+                        DebugLog.loge(e);
+                        jsonObject = new JSONObject();
+                    }
                 }
                 if (callback != null) {
                     callback.result(statusCode, jsonObject, error.getContent());
@@ -166,15 +174,23 @@ public class NetworkService extends ContextWrapper {
         call.post(url, body).enqueue(new ApiCallback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, boolean isSuccess, int statusCode, ResponseBody response, @Nullable String requestText, String requestUrl, ErrorR error, boolean isCancelled) {
+                String responseText = null;
                 JSONObject jsonObject = new JSONObject();
                 try {
                     if (response != null) {
-                        if (!response.string().isEmpty()) {
-                            jsonObject = new JSONObject(response.string());
-                        }
+                        responseText = response.string();
                     }
                 } catch (Exception e) {
                     DebugLog.loge(e);
+                }
+                if (responseText == null) responseText = "";
+                if (!responseText.isEmpty()) {
+                    try {
+                        jsonObject = new JSONObject(responseText);
+                    } catch (Exception e) {
+                        DebugLog.loge(e);
+                        jsonObject = new JSONObject();
+                    }
                 }
                 if (callback != null) {
                     callback.result(statusCode, jsonObject, error.getContent());
