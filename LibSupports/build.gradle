@@ -5,13 +5,13 @@ group='com.github.nmdung9x'
 
 android {
     compileSdkVersion 30
-    buildToolsVersion "30.0.2"
+    buildToolsVersion "30.0.3"
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 30
 
         versionCode 12
-        versionName "3.1.0"
+        versionName "3.2.6"
     }
 
     buildTypes {
@@ -30,7 +30,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.3.0'
 
     implementation 'com.nineoldandroids:library:2.4.0'
-    implementation 'com.android.volley:volley:1.1.1'
+    implementation 'com.android.volley:volley:1.2.0'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'

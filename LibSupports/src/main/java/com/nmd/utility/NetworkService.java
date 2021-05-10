@@ -23,6 +23,7 @@ import com.nmd.utility.common.ApiCallback;
 import com.nmd.utility.common.ErrorR;
 import com.nmd.utility.other.MultipartRequest;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
@@ -145,7 +146,12 @@ public class NetworkService extends ContextWrapper {
                 if (responseText == null) responseText = "";
                 if (!responseText.isEmpty()) {
                     try {
-                        jsonObject = new JSONObject(responseText);
+                        if (responseText.startsWith("{")) {
+                            jsonObject = new JSONObject(responseText);
+                        } else if (responseText.startsWith("[")) {
+                            jsonObject = new JSONObject();
+                            jsonObject.put("content", new JSONArray(responseText));
+                        }
                     } catch (Exception e) {
                         DebugLog.loge(e);
                         jsonObject = new JSONObject();
@@ -186,7 +192,12 @@ public class NetworkService extends ContextWrapper {
                 if (responseText == null) responseText = "";
                 if (!responseText.isEmpty()) {
                     try {
-                        jsonObject = new JSONObject(responseText);
+                        if (responseText.startsWith("{")) {
+                            jsonObject = new JSONObject(responseText);
+                        } else if (responseText.startsWith("[")) {
+                            jsonObject = new JSONObject();
+                            jsonObject.put("content", new JSONArray(responseText));
+                        }
                     } catch (Exception e) {
                         DebugLog.loge(e);
                         jsonObject = new JSONObject();
