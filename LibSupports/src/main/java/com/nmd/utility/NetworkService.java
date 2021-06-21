@@ -2,6 +2,7 @@ package com.nmd.utility;
 
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,6 +22,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.nmd.utility.common.ApiCallback;
 import com.nmd.utility.common.ErrorR;
+import com.nmd.utility.other.FileUtils;
 import com.nmd.utility.other.MultipartRequest;
 
 import org.json.JSONArray;
@@ -39,6 +41,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -47,7 +51,9 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
 import retrofit2.http.Url;
 
 /**
@@ -113,10 +119,15 @@ public class NetworkService extends ContextWrapper {
 
         @POST
         Call<ResponseBody> post(@Url String url, @Body RequestBody body);
+
+        @POST
+        @Multipart
+        Call<ResponseBody> post(@Url String url, @Part MultipartBody.Part file);
     }
 
     public interface OnResponse {
         void result(int statusCode, JSONObject responseJson, String errorString);
+        void response(int statusCode, String response, String errorString);
     }
 
     public static void get(String url, final OnResponse callback) {
@@ -151,7 +162,7 @@ public class NetworkService extends ContextWrapper {
                         } else if (responseText.startsWith("[")) {
                             jsonObject = new JSONObject();
                             jsonObject.put("content", new JSONArray(responseText));
-                        }
+                        } else jsonObject = new JSONObject();
                     } catch (Exception e) {
                         DebugLog.loge(e);
                         jsonObject = new JSONObject();
@@ -159,6 +170,7 @@ public class NetworkService extends ContextWrapper {
                 }
                 if (callback != null) {
                     callback.result(statusCode, jsonObject, error.getContent());
+                    callback.response(statusCode, responseText, error.getContent());
                 }
             }
         });
@@ -197,7 +209,7 @@ public class NetworkService extends ContextWrapper {
                         } else if (responseText.startsWith("[")) {
                             jsonObject = new JSONObject();
                             jsonObject.put("content", new JSONArray(responseText));
-                        }
+                        } else jsonObject = new JSONObject();
                     } catch (Exception e) {
                         DebugLog.loge(e);
                         jsonObject = new JSONObject();
@@ -205,6 +217,53 @@ public class NetworkService extends ContextWrapper {
                 }
                 if (callback != null) {
                     callback.result(statusCode, jsonObject, error.getContent());
+                    callback.response(statusCode, responseText, error.getContent());
+                }
+            }
+        });
+    }
+
+    public static void post(Context context, RetrofitCall call, String url, String keyFile, Uri uri, final OnResponse callback) {
+        File file = FileUtils.from(context, uri);
+        if (file == null) {
+            callback.result(-1, null, "IOException");
+            callback.response(-1, "", "IOException");
+            return;
+        }
+        MediaType mediaType = MediaType.parse(context.getContentResolver().getType(uri));
+
+        RequestBody requestFile = RequestBody.create(mediaType, file);
+        MultipartBody.Part body = MultipartBody.Part.createFormData(keyFile, file.getName(), requestFile);
+
+        call.post(url, body).enqueue(new ApiCallback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, boolean isSuccess, int statusCode, ResponseBody response, @Nullable String requestText, String requestUrl, ErrorR error, boolean isCancelled) {
+                String responseText = null;
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    if (response != null) {
+                        responseText = response.string();
+                    }
+                } catch (Exception e) {
+                    DebugLog.loge(e);
+                }
+                if (responseText == null) responseText = "";
+                if (!responseText.isEmpty()) {
+                    try {
+                        if (responseText.startsWith("{")) {
+                            jsonObject = new JSONObject(responseText);
+                        } else if (responseText.startsWith("[")) {
+                            jsonObject = new JSONObject();
+                            jsonObject.put("content", new JSONArray(responseText));
+                        } else jsonObject = new JSONObject();
+                    } catch (Exception e) {
+                        DebugLog.loge(e);
+                        jsonObject = new JSONObject();
+                    }
+                }
+                if (callback != null) {
+                    callback.result(statusCode, jsonObject, error.getContent());
+                    callback.response(statusCode, responseText, error.getContent());
                 }
             }
         });

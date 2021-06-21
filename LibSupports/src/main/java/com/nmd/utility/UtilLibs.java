@@ -12,7 +12,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
-import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,7 +23,6 @@ import android.graphics.drawable.Drawable;
 import android.icu.text.DecimalFormat;
 import android.media.AudioManager;
 import android.media.ExifInterface;
-import android.media.MediaMetadataRetriever;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -75,17 +73,9 @@ import com.nmd.utility.other.ResizeWidthAnimation;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -99,6 +89,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Formatter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -1124,142 +1115,6 @@ public class UtilLibs {
 		return month;
 	}
 
-	/**
-	 * Get Duration of AudioFile.
-	 *
-	 * @param filePath
-	 *            path or url of file
-	 * 
-	 * @return (long) result.
-	 */
-	public static long getDurationAudioFile(String filePath) {
-		try {
-			MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
-			metaRetriever.setDataSource(filePath);
-			long dur = Long.parseLong(metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-			return dur;
-		} catch (Exception e) {
-			DebugLog.loge(e);
-		}
-		return 0;
-	}
-
-	/**
-	 * Write To File In SDCard.
-	 *
-	 * @param pathFile
-	 *            the path to the directory where the file is stored.
-	 * @param data
-	 *            data to write
-	 * 
-	 */
-	public static void writeToFileInSDCard(String pathFile, String data) {
-		try {
-			OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(new File(pathFile)));
-			outputStreamWriter.write(data);
-			outputStreamWriter.close();
-		} catch (IOException e) {
-			DebugLog.loge(e);
-		}
-	}
-
-	/**
-	 * Write To File In SDCard.
-	 *
-	 * @param path
-	 *            the path to the directory where the file is stored.
-	 * @param filename
-	 *            the file's name
-	 * @param data
-	 *            data to write
-	 * 
-	 */
-	public static void writeToFileInSDCard(String path, String filename, String data) {
-		try {
-			File pathFile = new File(path);
-			if (!pathFile.exists()) {
-				pathFile.mkdir();
-			}
-			OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(new File(path, filename)));
-			outputStreamWriter.write(data);
-			outputStreamWriter.close();
-		} catch (IOException e) {
-			DebugLog.loge(e);
-		}
-	}
-
-	/**
-	 * Read From File In SDCard.
-	 *
-	 * @param pathFile
-	 *            the path to the directory where the file is stored.
-	 * 
-	 * @return (String) result.
-	 */
-	public static String readFromFileInSDCard(String pathFile) {
-
-		String ret = "";
-
-		try {
-			InputStream inputStream = new FileInputStream(new File(pathFile));
-
-			if (inputStream != null) {
-				InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-				BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-				String receiveString = "";
-				StringBuilder stringBuilder = new StringBuilder();
-
-				while ((receiveString = bufferedReader.readLine()) != null) {
-					stringBuilder.append(receiveString);
-				}
-
-				inputStream.close();
-				ret = stringBuilder.toString();
-			}
-		} catch (Exception e) {
-			DebugLog.loge(e);
-		}
-
-		return ret;
-	}
-
-	/**
-	 * Read From File In SDCard.
-	 *
-	 * @param path
-	 *            the path to the directory where the file is stored.
-	 * @param filename
-	 *            the file's name
-	 * 
-	 * @return (String) result.
-	 */
-	public static String readFromFileInSDCard(String path, String filename) {
-
-		String ret = "";
-
-		try {
-			InputStream inputStream = new FileInputStream(new File(path, filename));
-
-			if (inputStream != null) {
-				InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-				BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-				String receiveString = "";
-				StringBuilder stringBuilder = new StringBuilder();
-
-				while ((receiveString = bufferedReader.readLine()) != null) {
-					stringBuilder.append(receiveString);
-				}
-
-				inputStream.close();
-				ret = stringBuilder.toString();
-			}
-		} catch (Exception e) {
-			DebugLog.loge(e);
-		}
-
-		return ret;
-	}
-
 	public static boolean isNumeric(String str) {
 		try {
 			double d = Double.parseDouble(str);
@@ -1324,82 +1179,6 @@ public class UtilLibs {
 	}
 
 	/**
-	 * Copy a file or all file in folder into assets to SD card or
-	 * InternalStored
-	 *
-	 * @param context
-	 *            The context to use. Usually your Application or Activity
-	 *            object.
-	 * @param path
-	 *            the path to the directory where the file to copy.
-	 * @param folderAssets
-	 *            folder in assets.
-	 * @param file
-	 *            the file's name
-	 * 
-	 */
-	public static void copyAssets(Context context, String path, String folderAssets, String file) {
-		AssetManager assetManager = context.getAssets();
-		String[] files = null;
-		try {
-			files = assetManager.list(folderAssets);
-		} catch (IOException e) {
-			if (e != null)
-				DebugLog.loge("Failed to get asset file list: " + e);
-			return;
-		}
-		for (String filename : files) {
-			if (file.equals("")) {
-				InputStream in = null;
-				OutputStream out = null;
-				try {
-					in = assetManager.open(folderAssets + "/" + filename);
-					File outFile = new File(path, filename);
-					out = new FileOutputStream(outFile);
-					copyFile(in, out);
-					in.close();
-					in = null;
-					out.flush();
-					out.close();
-					out = null;
-					DebugLog.logd("copy asset file: " + filename);
-				} catch (IOException e) {
-					if (e != null)
-						DebugLog.loge("Failed to copy asset file: " + filename + "\n" + e);
-				}
-			} else {
-				if (filename.contains(file)) {
-					InputStream in = null;
-					OutputStream out = null;
-					try {
-						in = assetManager.open(folderAssets + "/" + filename);
-						File outFile = new File(path, filename);
-						out = new FileOutputStream(outFile);
-						copyFile(in, out);
-						in.close();
-						in = null;
-						out.flush();
-						out.close();
-						out = null;
-						DebugLog.logd("copy asset file: " + filename);
-					} catch (IOException e) {
-						if (e != null)
-							DebugLog.loge("Failed to copy asset file: " + filename + "\n" + e);
-					}
-				}
-			}
-		}
-	}
-
-	static void copyFile(InputStream in, OutputStream out) throws IOException {
-		byte[] buffer = new byte[1024];
-		int read;
-		while ((read = in.read(buffer)) != -1) {
-			out.write(buffer, 0, read);
-		}
-	}
-
-	/**
 	 * Checks whether a wired headset is connected or not.
 	 *
 	 * @param context
@@ -1435,32 +1214,6 @@ public class UtilLibs {
 	public static boolean isNetworkConnect() {
 		if (UtilityMain.mContext == null) return false;
 		return isNetworkConnect(UtilityMain.mContext);
-	}
-
-	/**
-	 * get list picture file
-	 *
-	 * @param file
-	 *            get list file follow format: png, jpg, jpeg, bmp.
-	 * 
-	 * @return (File[]) result.
-	 */
-	public static File[] listValidImageFiles(File file) {
-		try {
-			return file.listFiles(new FilenameFilter() {
-
-				@Override
-				public boolean accept(File dir, String filename) {
-					File file2 = new File(dir, filename);
-					return (filename.contains(".png") || filename.contains(".jpg") || filename.contains(".jpeg") || filename.contains(".bmp") || file2.isDirectory()) && !file2.isHidden()
-							&& !filename.startsWith(".");
-
-				}
-			});
-		} catch (Exception e) {
-			DebugLog.loge(e);
-		}
-		return new File[]{};
 	}
 
 	//TODO ===================== JSON =====================
@@ -1633,38 +1386,6 @@ public class UtilLibs {
 			return s;
 		} else {
 			return Character.toUpperCase(first) + s.substring(1);
-		}
-	}
-
-	public static void copyFile(File sourceLocation, File targetLocation, boolean isDelete) {
-		try {
-			if (sourceLocation.isDirectory()) {
-				if (!targetLocation.exists()) {
-					targetLocation.mkdir();
-				}
-
-				String[] children = sourceLocation.list();
-				for (int i = 0; i < children.length; i++) {
-					copyFile(new File(sourceLocation, children[i]), new File(targetLocation, children[i]), isDelete);
-				}
-			} else {
-
-				InputStream in = new FileInputStream(sourceLocation);
-				OutputStream out = new FileOutputStream(targetLocation);
-
-				byte[] buf = new byte[1024];
-				int len;
-				while ((len = in.read(buf)) > 0) {
-					out.write(buf, 0, len);
-				}
-				out.close();
-				in.close();
-				if (isDelete) {
-					sourceLocation.delete();
-				}
-			}
-		} catch (Exception e) {
-			DebugLog.loge(e);
 		}
 	}
 
@@ -2619,6 +2340,36 @@ public class UtilLibs {
 			}
 		}
 		return "";
+	}
+
+	static StringBuilder mFormatBuilder;
+	static Formatter mFormatter;
+
+	public static String convertTime(int timeMs, boolean showMilli) {
+		if (mFormatBuilder == null) mFormatBuilder = new StringBuilder();
+		if (mFormatter == null) mFormatter = new Formatter(mFormatBuilder, Locale.getDefault());
+
+		int totalSeconds = timeMs / 1000;
+
+		int milli = timeMs % 1000;
+		int seconds = totalSeconds % 60;
+		int minutes = (totalSeconds / 60) % 60;
+		int hours = totalSeconds / 3600;
+
+		mFormatBuilder.setLength(0);
+		if (showMilli) {
+			if (hours > 0) {
+				return mFormatter.format("%02d:%02d:%02d,%03d", hours, minutes, seconds, milli).toString();
+			} else {
+				return mFormatter.format("00:%02d:%02d,%03d", minutes, seconds, milli).toString();
+			}
+		} else {
+			if (hours > 0) {
+				return mFormatter.format("%02d:%02d:%02d", hours, minutes, seconds).toString();
+			} else {
+				return mFormatter.format("00:%02d:%02d", minutes, seconds).toString();
+			}
+		}
 	}
 
 	@ColorInt

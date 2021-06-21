@@ -1,28 +1,44 @@
 package com.nmd.utility.other;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.text.DecimalFormat;
-import java.util.Comparator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.storage.StorageManager;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
+
+import com.nmd.utility.DebugLog;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.text.DecimalFormat;
+import java.util.Comparator;
 
 /**
  * Created by nmd9x on 4/18/17.
@@ -625,5 +641,352 @@ public class FileUtils {
             return tmp.getAbsolutePath();
         }
         return Environment.getExternalStorageDirectory().toString() + "/Android/data/" + context.getPackageName().toString() + "/files";
+    }
+
+    /**
+     * Get Duration of AudioFile.
+     *
+     * @param filePath
+     *            path or url of file
+     *
+     * @return (long) result.
+     */
+    public static long getDurationAudioFile(String filePath) {
+        try {
+            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+            metaRetriever.setDataSource(filePath);
+            long dur = Long.parseLong(metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+            return dur;
+        } catch (Exception e) {
+            DebugLog.loge(e);
+        }
+        return 0;
+    }
+
+    /**
+     * Write To File In SDCard.
+     *
+     * @param pathFile
+     *            the path to the directory where the file is stored.
+     * @param data
+     *            data to write
+     *
+     */
+    public static boolean writeToFileInSDCard(String pathFile, String data) {
+        try {
+            boolean isExist = true;
+            File output = new File(pathFile);
+            if (!output.exists()) isExist = output.createNewFile();
+            if (isExist) {
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(new File(pathFile)));
+                outputStreamWriter.write(data);
+                outputStreamWriter.close();
+            } else return false;
+        } catch (IOException e) {
+            DebugLog.loge(e);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Write To File In SDCard.
+     *
+     * @param path
+     *            the path to the directory where the file is stored.
+     * @param filename
+     *            the file's name
+     * @param data
+     *            data to write
+     *
+     */
+    public static boolean writeToFileInSDCard(String path, String filename, String data) {
+        try {
+            boolean isExist = true;
+            File pathFile = new File(path);
+            if (!pathFile.exists()) isExist = pathFile.mkdir();
+            if (isExist) {
+                return writeToFileInSDCard(new File(path, filename).getAbsolutePath(), data);
+            }
+        } catch (Exception e) {
+            DebugLog.loge(e);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Read From File In SDCard.
+     *
+     * @param pathFile
+     *            the path to the directory where the file is stored.
+     *
+     * @return (String) result.
+     */
+    public static String readFromFileInSDCard(String pathFile) {
+        try {
+            File input = new File(pathFile);
+            if (!input.exists()) return "";
+
+            InputStream inputStream = new FileInputStream(input);
+
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            String receiveString;
+            StringBuilder stringBuilder = new StringBuilder();
+
+            while ((receiveString = bufferedReader.readLine()) != null) {
+                stringBuilder.append(receiveString);
+            }
+
+            inputStream.close();
+            return stringBuilder.toString();
+        } catch (Exception e) {
+            DebugLog.loge(e);
+        }
+
+        return "";
+    }
+
+    /**
+     * Read From File In SDCard.
+     *
+     * @param path
+     *            the path to the directory where the file is stored.
+     * @param filename
+     *            the file's name
+     *
+     * @return (String) result.
+     */
+    public static String readFromFileInSDCard(String path, String filename) {
+        return readFromFileInSDCard(new File(path, filename).getAbsolutePath());
+    }
+
+    /**
+     * Copy a file or all file in folder into assets to SD card or
+     * InternalStored
+     *
+     * @param context
+     *            The context to use. Usually your Application or Activity
+     *            object.
+     * @param path
+     *            the path to the directory where the file to copy.
+     * @param folderAssets
+     *            folder in assets.
+     * @param file
+     *            the file's name
+     *
+     */
+    public static void copyAssets(Context context, String path, String folderAssets, String file) {
+        AssetManager assetManager = context.getAssets();
+        String[] files = null;
+        try {
+            files = assetManager.list(folderAssets);
+        } catch (IOException e) {
+            if (e != null)
+                DebugLog.loge("Failed to get asset file list: " + e);
+            return;
+        }
+        for (String filename : files) {
+            if (file.equals("")) {
+                InputStream in = null;
+                OutputStream out = null;
+                try {
+                    in = assetManager.open(folderAssets + "/" + filename);
+                    File outFile = new File(path, filename);
+                    out = new FileOutputStream(outFile);
+                    copyFile(in, out);
+                    in.close();
+                    in = null;
+                    out.flush();
+                    out.close();
+                    out = null;
+                    DebugLog.logd("copy asset file: " + filename);
+                } catch (IOException e) {
+                    if (e != null)
+                        DebugLog.loge("Failed to copy asset file: " + filename + "\n" + e);
+                }
+            } else {
+                if (filename.contains(file)) {
+                    InputStream in = null;
+                    OutputStream out = null;
+                    try {
+                        in = assetManager.open(folderAssets + "/" + filename);
+                        File outFile = new File(path, filename);
+                        out = new FileOutputStream(outFile);
+                        copyFile(in, out);
+                        in.close();
+                        in = null;
+                        out.flush();
+                        out.close();
+                        out = null;
+                        DebugLog.logd("copy asset file: " + filename);
+                    } catch (IOException e) {
+                        if (e != null)
+                            DebugLog.loge("Failed to copy asset file: " + filename + "\n" + e);
+                    }
+                }
+            }
+        }
+    }
+
+    static void copyFile(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[1024];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            out.write(buffer, 0, read);
+        }
+    }
+
+    /**
+     * get list picture file
+     *
+     * @param file
+     *            get list file follow format: png, jpg, jpeg, bmp.
+     *
+     * @return (File[]) result.
+     */
+    public static File[] listValidImageFiles(File file) {
+        try {
+            return file.listFiles(new FilenameFilter() {
+
+                @Override
+                public boolean accept(File dir, String filename) {
+                    File file2 = new File(dir, filename);
+                    return (filename.contains(".png") || filename.contains(".jpg") || filename.contains(".jpeg") || filename.contains(".bmp") || file2.isDirectory()) && !file2.isHidden()
+                            && !filename.startsWith(".");
+
+                }
+            });
+        } catch (Exception e) {
+            DebugLog.loge(e);
+        }
+        return new File[]{};
+    }
+
+    public static void copyFile(File sourceLocation, File targetLocation, boolean isDelete) {
+        try {
+            if (sourceLocation.isDirectory()) {
+                if (!targetLocation.exists()) {
+                    targetLocation.mkdir();
+                }
+
+                String[] children = sourceLocation.list();
+                for (int i = 0; i < children.length; i++) {
+                    copyFile(new File(sourceLocation, children[i]), new File(targetLocation, children[i]), isDelete);
+                }
+            } else {
+
+                InputStream in = new FileInputStream(sourceLocation);
+                OutputStream out = new FileOutputStream(targetLocation);
+
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+                out.close();
+                in.close();
+                if (isDelete) {
+                    sourceLocation.delete();
+                }
+            }
+        } catch (Exception e) {
+            DebugLog.loge(e);
+        }
+    }
+
+    static final int EOF = -1;
+    static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
+
+    public static File from(Context context, Uri uri) {
+        try {
+            InputStream inputStream = context.getContentResolver().openInputStream(uri);
+            String fileName = getFileName(context, uri);
+            String[] splitName = splitFileName(fileName);
+            File tempFile = File.createTempFile(splitName[0], splitName[1]);
+            tempFile = rename(tempFile, fileName);
+            tempFile.deleteOnExit();
+            FileOutputStream out = null;
+            try {
+                out = new FileOutputStream(tempFile);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            if (inputStream != null) {
+                copy(inputStream, out);
+                inputStream.close();
+            }
+
+            if (out != null) {
+                out.close();
+            }
+            return tempFile;
+        } catch (Exception e) {
+            DebugLog.loge(e);
+        }
+        return null;
+    }
+
+    static String[] splitFileName(String fileName) {
+        String name = fileName;
+        String extension = "";
+        int i = fileName.lastIndexOf(".");
+        if (i != -1) {
+            name = fileName.substring(0, i);
+            extension = fileName.substring(i);
+        }
+
+        return new String[]{name, extension};
+    }
+
+    static String getFileName(Context context, Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf(File.separator);
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
+    }
+
+    static File rename(File file, String newName) {
+        File newFile = new File(file.getParent(), newName);
+        if (!newFile.equals(file)) {
+            if (newFile.exists() && newFile.delete()) {
+                Log.d("FileUtil", "Delete old " + newName + " file");
+            }
+            if (file.renameTo(newFile)) {
+                Log.d("FileUtil", "Rename file to " + newName);
+            }
+        }
+        return newFile;
+    }
+
+    static long copy(InputStream input, OutputStream output) throws IOException {
+        long count = 0;
+        int n;
+        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+        while (EOF != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+            count += n;
+        }
+        return count;
     }
 }
