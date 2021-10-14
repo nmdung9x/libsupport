@@ -65,6 +65,7 @@ import androidx.annotation.ColorRes;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.RequiresPermission;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.view.ViewCompat;
 
 import com.nmd.utility.other.Data;
 import com.nmd.utility.other.ResizeHeightAnimation;
@@ -1210,7 +1211,8 @@ public class UtilLibs {
 		final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
 		return activeNetwork != null && activeNetwork.isConnected();
 	}
-	
+
+	@RequiresPermission(android.Manifest.permission.ACCESS_NETWORK_STATE)
 	public static boolean isNetworkConnect() {
 		if (UtilityMain.mContext == null) return false;
 		return isNetworkConnect(UtilityMain.mContext);
@@ -2209,7 +2211,7 @@ public class UtilLibs {
 
 	}
 	
-	public static void copyTextToCLipboard(Context context, String text) {
+	public static void copyTextToClipboard(Context context, String text) {
         ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("Clipboard", text);
         clipboard.setPrimaryClip(clip);
@@ -2379,5 +2381,24 @@ public class UtilLibs {
 
 	public static Drawable getDrawable(Context context, @DrawableRes int id) {
 		return ResourcesCompat.getDrawable(context.getResources(), id, context.getTheme());
+	}
+
+	public static void animationView(View view, ViewAnimationListener callback) {
+		startScaleViewAnimation(view, 0.9f, 175, callback);
+	}
+
+	public interface ViewAnimationListener {
+		void onComplete();
+	}
+
+	/**
+	 * Start Scale View Animation
+	 */
+	public static void startScaleViewAnimation(final View view, float scale, long duration, ViewAnimationListener callback) {
+		ViewCompat.animate(view).scaleX(scale).scaleY(scale).alpha(0.5f).setDuration(duration);
+		new Handler().postDelayed(() -> ViewCompat.animate(view).scaleX(1).scaleY(1).alpha(1).setDuration(duration), duration);
+		new Handler().postDelayed(() -> {
+			if (callback != null) callback.onComplete();
+		}, duration * 2);
 	}
 }
