@@ -14,6 +14,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -67,6 +68,7 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.RequiresPermission;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.ViewCompat;
+import androidx.multidex.BuildConfig;
 
 import com.nmd.utility.common.Aes;
 import com.nmd.utility.other.Data;
@@ -114,6 +116,46 @@ public class UtilLibs {
 		} else {
 			return false;
 		}
+	}
+
+	public static boolean isDeviceRooted() {
+		String[] locations = {"/system/bin/", "/system/xbin/", "/sbin/", "/system/sd/xbin/",
+				"/system/bin/failsafe/", "/data/local/xbin/", "/data/local/bin/", "/data/local/",
+				"/system/sbin/", "/usr/bin/", "/vendor/bin/"};
+		for (String location : locations) {
+			if (new File(location + "su").exists()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isTablet() {
+		return (Resources.getSystem().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+	}
+
+	@SuppressLint("PackageManagerGetSignatures")
+	public static String getSignatures(Context context, String algorithm, boolean showColon) {
+		try {
+			PackageInfo info = context.getPackageManager().getPackageInfo(BuildConfig.APPLICATION_ID, PackageManager.GET_SIGNATURES);
+			for (Signature s : info.signatures) {
+				MessageDigest md = MessageDigest.getInstance(algorithm);
+				md.update(s.toByteArray());
+				final byte[] d = md.digest();
+				final StringBuilder sb = new StringBuilder();
+				for (int i = 0; i < d.length; i++) {
+					if (i != 0 && showColon) sb.append(":");
+					int b = d[i] & 0xff;
+					String h = Integer.toHexString(b);
+					if (h.length() == 1) sb.append("0");
+					sb.append(h);
+				}
+				return sb.toString();
+			}
+		} catch (Exception e) {
+			DebugLog.loge(e);
+		}
+		return "";
 	}
 
 	/**
