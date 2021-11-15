@@ -128,27 +128,6 @@ public class SharedPreference {
 		}
 	}
 
-	public static String getE(Context context, Object key, String defData, byte[] pass_key_encrypt) {
-		sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-		try {
-			return UtilLibs.AESdecrypt(pass_key_encrypt, sharedPreferences.getString(String.valueOf(key), defData));
-		} catch (Exception e) {
-			DebugLog.loge(e);
-			return defData;
-		}
-	}
-
-	public static void setE(Context context, Object key, String data, byte[] pass_key_encrypt) {
-		try {
-			sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-			Editor editor = sharedPreferences.edit();
-			editor.putString(String.valueOf(key), UtilLibs.AESencrypt(pass_key_encrypt, data));
-			editor.commit();
-		} catch (Exception e) {
-			DebugLog.loge(e);
-		}
-	}
-
 	public static String getL(Context context, Object key, String defData) {
 		String data = "";
 

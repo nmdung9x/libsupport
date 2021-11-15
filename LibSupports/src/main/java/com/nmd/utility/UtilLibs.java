@@ -1,5 +1,7 @@
 package com.nmd.utility;
 
+import static com.nineoldandroids.view.ViewPropertyAnimator.animate;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ClipData;
@@ -45,7 +47,6 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
@@ -67,6 +68,7 @@ import androidx.annotation.RequiresPermission;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.ViewCompat;
 
+import com.nmd.utility.common.Aes;
 import com.nmd.utility.other.Data;
 import com.nmd.utility.other.ResizeHeightAnimation;
 import com.nmd.utility.other.ResizeWidthAnimation;
@@ -77,10 +79,9 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.Key;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
@@ -97,14 +98,6 @@ import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-
-import Decoder.BASE64Decoder;
-import Decoder.BASE64Encoder;
-
-import static com.nineoldandroids.view.ViewPropertyAnimator.animate;
 
 @SuppressLint({ "SimpleDateFormat", "InlinedApi", "DefaultLocale" })
 @SuppressWarnings("unused")
@@ -128,32 +121,29 @@ public class UtilLibs {
 	 *
 	 * @return (int) -12 to 14
 	 */
-	public static int getTimeZoneInLocal() {
-		TimeZone timeZone = TimeZone.getDefault();
-		int timeZoneOffSet = timeZone.getRawOffset() / 1000 / 3600;
-		return timeZoneOffSet;
+	public static long getTimeZoneInLocal() {
+		return TimeZone.getDefault().getRawOffset() / 1000 / 3600;
 	}
 
-	public static long getCurrentTimeMiliByTimeZone(int timezone) {
-		long result = System.currentTimeMillis() - ((getTimeZoneInLocal() - timezone) * 3600 * 1000);
-		return result;
+	public static long getCurrentTimeMillisByTimeZone(int timezone) {
+		return System.currentTimeMillis() - ((getTimeZoneInLocal() - timezone) * 3600 * 1000);
 
 	}
 
 	/**
 	 * Get DateTime.
 	 *
-	 * @param dateTimeInMiliseconds
-	 *            datetime in miliseconds
+	 * @param dateTimeInMillis
+	 *            datetime in milliseconds
 	 * @param format
 	 *            like "yyyy/MM/dd HH:mm:ss"
 	 * 
 	 * @return (String) result allow format
 	 */
-	public static String getDateTime(Object dateTimeInMiliseconds, String format) {
+	public static String getDateTime(Object dateTimeInMillis, String format) {
 		long value = 0;
 		try {
-			value = checkLongValue(String.valueOf(dateTimeInMiliseconds));
+			value = checkLongValue(String.valueOf(dateTimeInMillis));
 		} catch (Exception e) {
 		}
 		SimpleDateFormat sdf = new SimpleDateFormat(format);
@@ -164,7 +154,7 @@ public class UtilLibs {
 		try {
 			DateFormat format = new SimpleDateFormat(dateFormat, Locale.US);
 			Date date = format.parse(value);
-			return date.getTime();
+			return date == null ? 0 : date.getTime();
 		} catch (Exception e) {
 			DebugLog.loge(e);
 		}
@@ -172,9 +162,9 @@ public class UtilLibs {
 		return 0;
 	}
 
-	public static int checkDayOfWeek(long dateTimeInMiliseconds) {
+	public static int checkDayOfWeek(long dateTimeInMilliseconds) {
 		SimpleDateFormat sdf = new SimpleDateFormat("EEEE", Locale.ENGLISH);
-		String value = sdf.format(dateTimeInMiliseconds);
+		String value = sdf.format(dateTimeInMilliseconds);
 		if (value.equalsIgnoreCase("Monday")) {
 			return 2;
 		} else if (value.equalsIgnoreCase("Tuesday")) {
@@ -193,7 +183,7 @@ public class UtilLibs {
 		return 1;
 	}
 
-	public static long parseTimeToMiliseconds(int dayOfMonth, int month, int year, int hour, int minute, int second) {
+	public static long parseTimeToMilliseconds(int dayOfMonth, int month, int year, int hour, int minute, int second) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
 		calendar.set(Calendar.MONTH, month - 1);
@@ -446,27 +436,21 @@ public class UtilLibs {
 		if (obj instanceof TextView) {
 			final TextView view = (TextView) obj;
 			view.setError(errorMessage);
-			view.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-				@Override
-				public void onFocusChange(View arg0, boolean arg1) {
-					if (view == null || view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
-						view.setError(errorMessage);
-					} else {
-						view.setError(null);
-					}
+			view.setOnFocusChangeListener((arg0, arg1) -> {
+				if (view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
+					view.setError(errorMessage);
+				} else {
+					view.setError(null);
 				}
 			});
 		} else if (obj instanceof EditText) {
 			final EditText view = (EditText) obj;
 			view.setError(errorMessage);
-			view.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-				@Override
-				public void onFocusChange(View arg0, boolean arg1) {
-					if (view == null || view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
-						view.setError(errorMessage);
-					} else {
-						view.setError(null);
-					}
+			view.setOnFocusChangeListener((arg0, arg1) -> {
+				if (view == null || view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
+					view.setError(errorMessage);
+				} else {
+					view.setError(null);
 				}
 			});
 		}
@@ -478,27 +462,21 @@ public class UtilLibs {
 		if (obj instanceof TextView) {
 			final TextView view = (TextView) obj;
 			view.setError(Html.fromHtml("<font color='black'>" + errorMessage + "!</font>"));
-			view.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-				@Override
-				public void onFocusChange(View arg0, boolean arg1) {
-					if (view == null || view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
-						view.setError(Html.fromHtml("<font color='black'>" + errorMessage + "!</font>"));
-					} else {
-						view.setError(null);
-					}
+			view.setOnFocusChangeListener((arg0, arg1) -> {
+				if (view == null || view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
+					view.setError(Html.fromHtml("<font color='black'>" + errorMessage + "!</font>"));
+				} else {
+					view.setError(null);
 				}
 			});
 		} else if (obj instanceof EditText) {
 			final EditText view = (EditText) obj;
 			view.setError(Html.fromHtml("<font color='black'>" + errorMessage + "!</font>"));
-			view.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-				@Override
-				public void onFocusChange(View arg0, boolean arg1) {
-					if (view == null || view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
-						view.setError(Html.fromHtml("<font color='black'>" + errorMessage + "!</font>"));
-					} else {
-						view.setError(null);
-					}
+			view.setOnFocusChangeListener((arg0, arg1) -> {
+				if (view == null || view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
+					view.setError(Html.fromHtml("<font color='black'>" + errorMessage + "!</font>"));
+				} else {
+					view.setError(null);
 				}
 			});
 		}
@@ -514,11 +492,11 @@ public class UtilLibs {
 			if (view instanceof EditText) {
 				((EditText) view).setError(null);
 			}
-		} catch (Exception e) {
+		} catch (Exception ignored) {
 		}
 	}
 
-	public static void showKeybroadEditText(Context context, EditText editText) {
+	public static void showKeyboardEditText(Context context, EditText editText) {
 		InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
 		imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
 	}
@@ -545,19 +523,19 @@ public class UtilLibs {
 		inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 	}
 
-	public static void showKeyboard(Context context, View viewForcus) {
-		showKeyboard((Activity) context, viewForcus, false);
+	public static void showKeyboard(Context context, View viewFocus) {
+		showKeyboard((Activity) context, viewFocus, false);
 	}
 
-	public static void showKeyboard(Context context, View viewForcus, boolean requestFocus) {
-		showKeyboard((Activity) context, viewForcus, requestFocus);
+	public static void showKeyboard(Context context, View viewFocus, boolean requestFocus) {
+		showKeyboard((Activity) context, viewFocus, requestFocus);
 	}
 
-	public static void showKeyboard(Activity activity, View viewForcus, boolean requestFocus) {
+	public static void showKeyboard(Activity activity, View viewFocus, boolean requestFocus) {
 		InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
 		inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 
-		if (requestFocus) viewForcus.requestFocus();
+		if (requestFocus) viewFocus.requestFocus();
 	}
 
 	/**
@@ -572,12 +550,12 @@ public class UtilLibs {
 	 * 
 	 */
 
-	public static void hiddenSofwareKeyboard(Context context, View view) {
+	public static void hideSoftwareKeyboard(Context context, View view) {
 		if (view != null) {
 			try {
 				InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-			} catch (Exception e) {
+			} catch (Exception ignored) {
 			}
 		}
 	}
@@ -598,7 +576,7 @@ public class UtilLibs {
 
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
-				if (hasFocus == true) {
+				if (hasFocus) {
 					InputMethodManager inputMgr = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
 					inputMgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 					inputMgr.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
@@ -705,7 +683,7 @@ public class UtilLibs {
 		emailIntent.putExtra(Intent.EXTRA_EMAIL, emails);
 		emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
 		emailIntent.putExtra(Intent.EXTRA_TEXT, bodyText);
-		context.startActivity(Intent.createChooser(emailIntent, "Email Client").setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+		context.startActivity(Intent.createChooser(emailIntent, "Email app").setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
 	}
 	
 	@SuppressLint("NewApi")
@@ -858,17 +836,17 @@ public class UtilLibs {
 	public static ArrayList<String> splitComme2(String text, String split) {
 		try {
 			String[] items = text.split(split);
-			ArrayList<String> newitems = new ArrayList<String>();
+			ArrayList<String> newItems = new ArrayList<>();
 			for (int i = 0; i < items.length; i++) {
-				if (!items[i].toString().equals("")) {
-					newitems.add(items[i].toString());
+				if (!items[i].equals("")) {
+					newItems.add(items[i]);
 				}
 			}
-			return newitems;
+			return newItems;
 		} catch (Exception e) {
 			DebugLog.loge(e);
 		}
-		return new ArrayList<String>();
+		return new ArrayList<>();
 	}
 
 	/**
@@ -910,7 +888,7 @@ public class UtilLibs {
 			int halfbyte = (b >>> 4) & 0x0F;
 			int two_halfs = 0;
 			do {
-				buf.append((0 <= halfbyte) && (halfbyte <= 9) ? (char) ('0' + halfbyte) : (char) ('a' + (halfbyte - 10)));
+				buf.append(halfbyte <= 9 ? (char) ('0' + halfbyte) : (char) ('a' + halfbyte - 10));
 				halfbyte = b & 0x0F;
 			} while (two_halfs++ < 1);
 		}
@@ -933,11 +911,10 @@ public class UtilLibs {
 		MessageDigest md;
 		try {
 			md = MessageDigest.getInstance("SHA-1");
-			md.update(text.getBytes("iso-8859-1"), 0, text.length());
+			md.update(text.getBytes(StandardCharsets.ISO_8859_1), 0, text.length());
 			byte[] sha1hash = md.digest();
 			result = convertToHex(sha1hash);
-		} catch (NoSuchAlgorithmException e) {
-		} catch (UnsupportedEncodingException e) {
+		} catch (NoSuchAlgorithmException ignored) {
 		}
 		return result;
 	}
@@ -982,16 +959,8 @@ public class UtilLibs {
 	 * @return (String) result.
 	 */
 
-	public static String AESencrypt(byte[] pass_key, String data) throws Exception {
-		if (data.equals("")) {
-			return "";
-		}
-		String valueToEnc = new String(data.getBytes(), "UTF-8");
-		Cipher c = Cipher.getInstance(ALGORITHM);
-		c.init(Cipher.ENCRYPT_MODE, generateKey(pass_key));
-		byte[] encValue = c.doFinal(valueToEnc.getBytes());
-		String encryptedValue = new BASE64Encoder().encode(encValue);
-		return encryptedValue;
+	public static String encryptAES(byte[] pass_key, String data) {
+		return Aes.encrypt(data, Aes.generateKey(pass_key), null);
 	}
 
 	/**
@@ -1002,37 +971,8 @@ public class UtilLibs {
 	 * 
 	 * @return (String) result.
 	 */
-	public static String AESdecrypt(byte[] pass_key, String encryptedValue) throws Exception {
-		if (encryptedValue.equals("")) {
-			return "";
-		}
-		Cipher c = Cipher.getInstance(ALGORITHM);
-		c.init(Cipher.DECRYPT_MODE, generateKey(pass_key));
-		byte[] decordedValue = new BASE64Decoder().decodeBuffer(encryptedValue);
-		byte[] decValue = c.doFinal(decordedValue);
-		String decryptedValue = new String(decValue);
-		return decryptedValue;
-	}
-
-	static final String ALGORITHM = "AES";
-
-	static Key generateKey(byte[] pass_key) throws Exception {
-		Key key = new SecretKeySpec(pass_key, ALGORITHM);
-		return key;
-	}
-
-	/**
-	 * Deletes this file. Directories must be empty before they will be deleted.
-	 *
-	 * @param path
-	 *            the path or url of file
-	 * 
-	 */
-	public static void deleteFile(String path) {
-		File file = new File(path);
-		if (file.exists()) {
-			boolean result = file.delete();
-		}
+	public static String decryptAES(byte[] pass_key, String encryptedValue) {
+		return Aes.decrypt(encryptedValue, Aes.generateKey(pass_key), null);
 	}
 
 	/**
@@ -1063,8 +1003,7 @@ public class UtilLibs {
 				DebugLog.loge("KeyHash >>>\n" + keyHash);
 			}
 		} catch (Exception e) {
-			if (e != null)
-				DebugLog.loge("Error: " + e.getMessage());
+			DebugLog.loge(e);
 		}
 		return keyHash;
 	}
@@ -1083,13 +1022,13 @@ public class UtilLibs {
 	 * @return (String) result.
 	 */
 	public static String getDayInDatePicker(DatePicker datePicker) {
-		String day = "";
+		String day;
 		int dayOfMonth = datePicker.getDayOfMonth();
 
 		if (dayOfMonth >= 10) {
 			day = String.valueOf(dayOfMonth);
 		} else {
-			day = "0" + String.valueOf(dayOfMonth);
+			day = "0" + dayOfMonth;
 		}
 
 		return day;
@@ -1104,13 +1043,13 @@ public class UtilLibs {
 	 * @return (String) result.
 	 */
 	public static String getMonthInDatePicker(DatePicker datePicker) {
-		String month = "";
+		String month;
 		int mMonth = datePicker.getMonth();
 		mMonth++;
 		if (mMonth >= 10) {
 			month = String.valueOf(mMonth);
 		} else {
-			month = "0" + String.valueOf(mMonth);
+			month = "0" + mMonth;
 		}
 
 		return month;
@@ -1170,7 +1109,7 @@ public class UtilLibs {
 	public static boolean isExistKey(ArrayList<String> list, String key) {
 		boolean isExistKey = false;
 		for (int i = 0; i < list.size(); i++) {
-			if (list.get(i).toString().equals(key)) {
+			if (list.get(i).equals(key)) {
 				isExistKey = true;
 				break;
 			}
@@ -1210,12 +1149,6 @@ public class UtilLibs {
 		final ConnectivityManager conMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 		final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
 		return activeNetwork != null && activeNetwork.isConnected();
-	}
-
-	@RequiresPermission(android.Manifest.permission.ACCESS_NETWORK_STATE)
-	public static boolean isNetworkConnect() {
-		if (UtilityMain.mContext == null) return false;
-		return isNetworkConnect(UtilityMain.mContext);
 	}
 
 	//TODO ===================== JSON =====================
@@ -1347,24 +1280,24 @@ public class UtilLibs {
 			str1 = lst.nextToken();
 			str2 = lst.nextToken();
 		}
-		String str3 = "";
+		StringBuilder str3 = new StringBuilder();
 		int i = 0;
 		int j = -1 + str1.length();
 		if (str1.charAt(-1 + str1.length()) == '.') {
 			j--;
-			str3 = ".";
+			str3 = new StringBuilder(".");
 		}
 		for (int k = j; ; k--) {
 			if (k < 0) {
 				if (str2.length() > 0)
-					str3 = str3 + "." + str2;
-				return str3;
+					str3.append(".").append(str2);
+				return str3.toString();
 			}
 			if (i == 3) {
-				str3 = "." + str3; //,
+				str3.insert(0, "."); //,
 				i = 0;
 			}
-			str3 = str1.charAt(k) + str3;
+			str3.insert(0, str1.charAt(k));
 			i++;
 		}
 	}
@@ -1392,7 +1325,7 @@ public class UtilLibs {
 	}
 
 	public static String resizeImage(String pathImage, String targetPath, int maxSize, int quality, boolean isDeleteOrigin) {
-		if (pathImage.equals(pathImage)) {
+		if (pathImage.equals(targetPath)) {
 			isDeleteOrigin = false;
 		}
 		try {
@@ -1454,7 +1387,7 @@ public class UtilLibs {
 	}
 
 	public static String resizeImageAndRotate(String pathImage, String targetPath, int maxSize, int quality, boolean isDeleteOrigin) {
-		if (pathImage.equals(pathImage)) {
+		if (pathImage.equals(targetPath)) {
 			isDeleteOrigin = false;
 		}
 		try {
@@ -1550,7 +1483,7 @@ public class UtilLibs {
 	}
 
 	public static String rotateImage(String pathImage, String targetPath, boolean isDeleteOrigin) {
-		if (pathImage.equals(pathImage)) {
+		if (pathImage.equals(targetPath)) {
 			isDeleteOrigin = false;
 		}
 		try {
@@ -1756,7 +1689,7 @@ public class UtilLibs {
 				Typeface type = Typeface.createFromAsset(context.getAssets(), fontAssets);
 				((TextView) v).setTypeface(type);
 			}
-		} catch (Exception e) {
+		} catch (Exception ignored) {
 		}
 	}
 
@@ -1844,12 +1777,7 @@ public class UtilLibs {
 					.alpha(0)
 					.setDuration(300)
 					.setInterpolator(new DecelerateInterpolator())
-					.withEndAction(new Runnable() {
-						@Override
-						public void run() {
-							viewHide.setVisibility(View.GONE);
-						}
-					});
+					.withEndAction(() -> viewHide.setVisibility(View.GONE));
 		}
 	}
 
@@ -1948,7 +1876,7 @@ public class UtilLibs {
 	@SuppressLint("DefaultLocale")
 	public static String removeAccents(String value) {
 		String text = value.toLowerCase();
-		String data = (text == null) ? "" : Normalizer.normalize(text, Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+		String data = Normalizer.normalize(text, Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 		return data.replaceAll("đ", "d");
 	}
 
@@ -2038,38 +1966,26 @@ public class UtilLibs {
 		return false;
 	}
 
-	public static void setScrollEditext(Context context, final EditText editText) {
+	@SuppressLint("ClickableViewAccessibility")
+	public static void setScrollEditText(Context context, final EditText editText) {
 		editText.setScroller(new Scroller(context));
 		editText.setMaxLines(3);
 		editText.setVerticalScrollBarEnabled(true);
 		editText.setMovementMethod(new ScrollingMovementMethod());
 
-		editText.setOnTouchListener(new OnTouchListener() {
-
-			@SuppressLint("ClickableViewAccessibility")
-			@Override
-			public boolean onTouch(View view, MotionEvent event) {
-				if (view.getId() == editText.getId()) {
-					view.getParent().requestDisallowInterceptTouchEvent(true);
-					switch (event.getAction() & MotionEvent.ACTION_MASK) {
-					case MotionEvent.ACTION_UP:
-						view.getParent().requestDisallowInterceptTouchEvent(false);
-						break;
-					}
+		editText.setOnTouchListener((view, event) -> {
+			if (view.getId() == editText.getId()) {
+				view.getParent().requestDisallowInterceptTouchEvent(true);
+				if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
+					view.getParent().requestDisallowInterceptTouchEvent(false);
 				}
-				return false;
 			}
+			return false;
 		});
 	}
 
 	public static void scrollUpToTop(final ScrollView scrollView, long delayTime) {
-		new Handler().postDelayed(new Runnable() {
-
-			@Override
-			public void run() {
-				scrollView.smoothScrollTo(0, 0);
-			}
-		}, delayTime);
+		new Handler().postDelayed(() -> scrollView.smoothScrollTo(0, 0), delayTime);
 	}
 
 	@SuppressLint("DefaultLocale")
@@ -2103,28 +2019,23 @@ public class UtilLibs {
 	public static void addStoreData(Context context, Object key, String value, String split) {
 		if (!checkStoreData(context, key, value, split)) {
 			String current = SharedPreference.get(context, String.valueOf(key), "");
-			StringBuilder builder = new StringBuilder();
-			builder.append(current);
-			builder.append(value + split);
-			SharedPreference.set(context, String.valueOf(key), builder.toString());
+			SharedPreference.set(context, String.valueOf(key), current + value + split);
 		}
 	}
 
 	public static void removeStoreData(Context context, Object key, String value, String split) {
 		if (checkStoreData(context, key, value, split)) {
 			String current = SharedPreference.get(context, String.valueOf(key), "");
-			String newValue = "";
-			newValue = current.replaceAll(value + split, "");
-			SharedPreference.set(context, String.valueOf(key), newValue);
+			SharedPreference.set(context, String.valueOf(key), current.replaceAll(value + split, ""));
 		}
 	}
 
-	public static ArrayList<String> getListStoredata(Context context, Object key, String split) {
+	public static ArrayList<String> getListStoreData(Context context, Object key, String split) {
 		try {
 			return splitComme2(SharedPreference.get(context, String.valueOf(key), ""), split);
-		} catch (Exception e) {
+		} catch (Exception ignored) {
 		}
-		return new ArrayList<String>();
+		return new ArrayList<>();
 	}
 
 	public static boolean checkStoreData(Context context, Object key, String value, String split) {
@@ -2140,8 +2051,8 @@ public class UtilLibs {
 		removeStoreData(context, key, value, ";");
 	}
 
-	public static ArrayList<String> getListStoredata(Context context, Object key) {
-		return getListStoredata(context, key, ";");
+	public static ArrayList<String> getListStoreData(Context context, Object key) {
+		return getListStoreData(context, key, ";");
 	}
 
 	public static boolean checkStoreData(Context context, Object key, String value) {
@@ -2221,7 +2132,7 @@ public class UtilLibs {
         try {
             File f = new File(path);
             if (!f.exists()) {
-                f.mkdir();
+                if (!f.mkdir()) return;
             }
         } catch (Exception e) {
             DebugLog.loge(e);
@@ -2267,14 +2178,14 @@ public class UtilLibs {
         return result;
     }
 
-	public static String encodeImageTobase64(Bitmap image)
+	public static String encodeImageToBase64(Bitmap image)
 	{
 		if (image == null) return "";
-		Bitmap immagex = image;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		immagex.compress(Bitmap.CompressFormat.PNG, 100, baos);
-		byte[] b = baos.toByteArray();
-		return Base64.encodeToString(b,Base64.DEFAULT);
+		Bitmap bitmap = image.copy(image.getConfig(), image.isMutable());
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+		byte[] b = outputStream.toByteArray();
+		return Base64.encodeToString(b, Base64.DEFAULT);
 	}
 
 	public static Bitmap decodeBase64ToImage(String input)

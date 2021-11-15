@@ -340,4 +340,22 @@ public class JsonUtils {
         } catch (Exception e) { DebugLog.logi(e); }
         return lst;
     }
+
+    public static JSONObject parseJsonObject(String data) {
+        try {
+            return new JSONObject(data);
+        } catch (Exception e) {
+            DebugLog.loge(e);
+        }
+        return null;
+    }
+
+    public static JSONArray parseJsonArray(String data) {
+        try {
+            return new JSONArray(data);
+        } catch (Exception e) {
+            DebugLog.loge(e);
+        }
+        return null;
+    }
 }

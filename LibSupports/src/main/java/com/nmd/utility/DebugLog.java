@@ -17,34 +17,37 @@ public class DebugLog {
 		v,
 		d,
 		i,
-		n,
 		w,
 		e
 	}
+
+	public static void log(Type type, String tag, Object msg){
+		log(type, tag, "", msg);
+	}
 	
-	public static String log(Type type, String tag, Object msg){
-    	if (msg == null) msg = "";
-    	if (String.valueOf(msg).trim().isEmpty()) return "";
-		String message;
+	public static void log(Type type, String tag, String msg, Object exc){
 		boolean isException = false;
+		String messageException = "";
 
-		if (msg instanceof Exception) {
-			isException = true;
-			Exception e = (Exception) msg;
-			StringWriter errors = new StringWriter();
-			e.printStackTrace(new PrintWriter(errors));
+		if (exc != null) {
+			if (exc instanceof Exception) {
+				isException = true;
+				Exception e = (Exception) exc;
+				StringWriter errors = new StringWriter();
+				e.printStackTrace(new PrintWriter(errors));
 
-			message = errors.toString();
-		} else if (msg instanceof Throwable) {
-			isException = true;
-			Throwable e = (Throwable) msg;
-			StringWriter errors = new StringWriter();
-			e.printStackTrace(new PrintWriter(errors));
+				messageException = errors.toString();
+			} else if (exc instanceof Throwable) {
+				isException = true;
+				Throwable e = (Throwable) exc;
+				StringWriter errors = new StringWriter();
+				e.printStackTrace(new PrintWriter(errors));
 
-			message = errors.toString();
-		} else {
-			message = String.valueOf(msg).trim();
+				messageException = errors.toString();
+			} else messageException = String.valueOf(exc);
 		}
+
+		String message = msg.isEmpty() ? messageException : msg + "\n" + messageException;
 
     	StackTraceElement stack = Thread.currentThread().getStackTrace()[4];
         String fullClassName = stack.getClassName();
@@ -87,15 +90,6 @@ public class DebugLog {
 				}
 				break;
 
-			case n:
-				if (UtilityMain.SHOW_LOG_N || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
-					Log.i(tag, check + message);
-				}
-				if (UtilityMain.DEBUG_N || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
-					appendLog("Log---n " + check + message);
-				}
-				break;
-
 			case w:
 				if (UtilityMain.SHOW_LOG_I || (isException && UtilityMain.SHOW_LOG_EXCEPTION)) {
 					Log.w(tag, check + message);
@@ -117,56 +111,87 @@ public class DebugLog {
 			default:
 				break;
 		}
-        return check + message;
-    }
-	
-    public static void logv(Object obj){
-        log(Type.v, UtilityMain.TAG, obj);
-    }
-    
-    public static void logv(String tag, Object obj){
-    	log(Type.v, tag, obj);
-    }
-	
-    public static void logd(Object obj){
-        log(Type.d, UtilityMain.TAG, obj);
-    }
-    
-    public static void logd(String tag, Object obj){
-    	log(Type.d, tag, obj);
-    }
-	
-    public static void logi(Object obj){
-        log(Type.i, UtilityMain.TAG, obj);
-    }
-    
-    public static void logi(String tag, Object obj){
-    	log(Type.i, tag, obj);
-    }
+	}
 
-    public static void logn(Object obj){
-        log(Type.n, UtilityMain.TAG, obj);
-    }
-    
-    public static void logn(String tag, Object obj){
-    	log(Type.n, tag, obj);
-    }
+	public static void logv(Object obj){
+		log(Type.v, UtilityMain.TAG, obj);
+	}
 
-    public static void logw(Object obj){
-        log(Type.w, UtilityMain.TAG, obj);
-    }
-    
-    public static void logw(String tag, Object obj){
-    	log(Type.w, tag, obj);
-    }
-	
-    public static void loge(Object obj){
-        log(Type.e, UtilityMain.TAG, obj);
-    }
-    
-    public static void loge(String tag, Object obj){
-    	log(Type.e, tag, obj);
-    }
+	public static void logv(Object msg, Object e){
+		log(Type.v, UtilityMain.TAG, String.valueOf(msg), e);
+	}
+
+	public static void logv(String tag, Object obj){
+		log(Type.v, tag, obj);
+	}
+
+	public static void logv(String tag, String msg, Object e){
+		log(Type.v, tag, msg, e);
+	}
+
+	public static void logd(Object obj){
+		log(Type.d, UtilityMain.TAG, obj);
+	}
+
+	public static void logd(Object msg, Object e){
+		log(Type.d, UtilityMain.TAG, String.valueOf(msg), e);
+	}
+
+	public static void logd(String tag, Object obj){
+		log(Type.d, tag, obj);
+	}
+
+	public static void logd(String tag, String msg, Object e){
+		log(Type.d, tag, msg, e);
+	}
+
+	public static void logi(Object obj){
+		log(Type.i, UtilityMain.TAG, obj);
+	}
+
+	public static void logi(Object msg, Object e){
+		log(Type.i, UtilityMain.TAG, String.valueOf(msg), e);
+	}
+
+	public static void logi(String tag, Object obj){
+		log(Type.i, tag, obj);
+	}
+
+	public static void logi(String tag, String msg, Object e){
+		log(Type.i, tag, msg, e);
+	}
+
+	public static void loge(Object obj){
+		log(Type.e, UtilityMain.TAG, obj);
+	}
+
+	public static void loge(Object msg, Object e){
+		log(Type.e, UtilityMain.TAG, String.valueOf(msg), e);
+	}
+
+	public static void loge(String tag, Object obj){
+		log(Type.e, tag, obj);
+	}
+
+	public static void loge(String tag, String msg, Object e){
+		log(Type.e, tag, msg, e);
+	}
+
+	public static void logw(Object obj){
+		log(Type.w, UtilityMain.TAG, obj);
+	}
+
+	public static void logw(Object msg, Object e){
+		log(Type.w, UtilityMain.TAG, String.valueOf(msg), e);
+	}
+
+	public static void logw(String tag, Object obj){
+		log(Type.w, tag, obj);
+	}
+
+	public static void logw(String tag, String msg, Object e){
+		log(Type.w, tag, msg, e);
+	}
     
 	static void appendLog(String text) {
 		if (!UtilityMain.isRecordLog) {

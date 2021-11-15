@@ -989,4 +989,29 @@ public class FileUtils {
         }
         return count;
     }
+
+    public static boolean deleteFile(String path) {
+        File file = new File(path);
+        if (file.exists()) {
+            return file.delete();
+        }
+        return false;
+    }
+
+    public static boolean deleteFolder(String path) {
+        File file = new File(path);
+        if (file.isDirectory()) {
+            File[] listFiles = file.listFiles();
+            if (listFiles != null && listFiles.length > 0) {
+                boolean success = true;
+                for (File item : listFiles) {
+                    if (!deleteFile(item.getPath())) {
+                        success = false;
+                    }
+                }
+                return success;
+            }
+            return false;
+        } else return deleteFile(path);
+    }
 }
