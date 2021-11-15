@@ -20,10 +20,6 @@ public class DebugLog {
 		w,
 		e
 	}
-
-	public static void log(Type type, String tag, Object msg){
-		log(type, tag, "", msg);
-	}
 	
 	public static void log(Type type, String tag, String msg, Object exc){
 		boolean isException = false;
@@ -114,7 +110,7 @@ public class DebugLog {
 	}
 
 	public static void logv(Object obj){
-		log(Type.v, UtilityMain.TAG, obj);
+		log(Type.v, UtilityMain.TAG, "", obj);
 	}
 
 	public static void logv(Object msg, Object e){
@@ -122,7 +118,7 @@ public class DebugLog {
 	}
 
 	public static void logv(String tag, Object obj){
-		log(Type.v, tag, obj);
+		log(Type.v, tag, "", obj);
 	}
 
 	public static void logv(String tag, String msg, Object e){
@@ -130,7 +126,7 @@ public class DebugLog {
 	}
 
 	public static void logd(Object obj){
-		log(Type.d, UtilityMain.TAG, obj);
+		log(Type.d, UtilityMain.TAG, "", obj);
 	}
 
 	public static void logd(Object msg, Object e){
@@ -138,7 +134,7 @@ public class DebugLog {
 	}
 
 	public static void logd(String tag, Object obj){
-		log(Type.d, tag, obj);
+		log(Type.d, tag, "", obj);
 	}
 
 	public static void logd(String tag, String msg, Object e){
@@ -146,7 +142,7 @@ public class DebugLog {
 	}
 
 	public static void logi(Object obj){
-		log(Type.i, UtilityMain.TAG, obj);
+		log(Type.i, UtilityMain.TAG, "", obj);
 	}
 
 	public static void logi(Object msg, Object e){
@@ -154,7 +150,7 @@ public class DebugLog {
 	}
 
 	public static void logi(String tag, Object obj){
-		log(Type.i, tag, obj);
+		log(Type.i, tag, "", obj);
 	}
 
 	public static void logi(String tag, String msg, Object e){
@@ -162,7 +158,7 @@ public class DebugLog {
 	}
 
 	public static void loge(Object obj){
-		log(Type.e, UtilityMain.TAG, obj);
+		log(Type.e, UtilityMain.TAG, "", obj);
 	}
 
 	public static void loge(Object msg, Object e){
@@ -170,7 +166,7 @@ public class DebugLog {
 	}
 
 	public static void loge(String tag, Object obj){
-		log(Type.e, tag, obj);
+		log(Type.e, tag, "", obj);
 	}
 
 	public static void loge(String tag, String msg, Object e){
@@ -178,7 +174,7 @@ public class DebugLog {
 	}
 
 	public static void logw(Object obj){
-		log(Type.w, UtilityMain.TAG, obj);
+		log(Type.w, UtilityMain.TAG, "", obj);
 	}
 
 	public static void logw(Object msg, Object e){
@@ -186,7 +182,7 @@ public class DebugLog {
 	}
 
 	public static void logw(String tag, Object obj){
-		log(Type.w, tag, obj);
+		log(Type.w, tag, "", obj);
 	}
 
 	public static void logw(String tag, String msg, Object e){
