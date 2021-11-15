@@ -26,12 +26,12 @@ public abstract class ApiCallback<T> implements Callback<T> {
     }
 
     private void log(Call<T> call, int statusCode) {
-        DebugLog.logn(call.request().method() + " : "+call.request().url().toString() + " [" + statusCode + "]");
+        DebugLog.logi(call.request().method() + " : "+call.request().url().toString() + " [" + statusCode + "]");
         if (call.request().body() != null) {
-            DebugLog.logn("[Request Body] "+bodyToString(call.request().body()));
+            DebugLog.logi("[Request Body] "+bodyToString(call.request().body()));
         }
         if (call.isCanceled()) {
-            DebugLog.logn("[!!! CANCELLED !!!]");
+            DebugLog.logi("[!!! CANCELLED !!!]");
         }
     }
 

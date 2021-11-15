@@ -69,13 +69,13 @@ public class Data {
 			if (data.size() > 0) {
 				for (int i = 0; i < data.size(); i++) {
 					buildTextPart(dos, data.get(i).getKey(), data.get(i).getValue());
-					DebugLog.logn(data.get(i).getKey() + ": " + data.get(i).getValue());
+					DebugLog.logi(data.get(i).getKey() + ": " + data.get(i).getValue());
 				}
 			}
 			if(files.size() > 0){
 				for (int i = 0; i < files.size(); i++) {
 					buildPart(dos, files.get(i).getKey(), UtilLibs.getFileNameAndExtension(files.get(i).value), readFile(new File(files.get(i).value)));
-					DebugLog.logn(files.get(i).getKey() + ": " + files.get(i).getValue());
+					DebugLog.logi(files.get(i).getKey() + ": " + files.get(i).getValue());
 				}
 			}
 			dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);

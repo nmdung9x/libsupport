@@ -107,7 +107,7 @@ public class DateTimeUtils {
         DatePickerDialog datePickerDialog = new DatePickerDialog(context, new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                long result_milliseconds = UtilLibs.parseTimeToMiliseconds(dayOfMonth, monthOfYear + 1, year, 1, 0, 0);
+                long result_milliseconds = UtilLibs.parseTimeToMilliseconds(dayOfMonth, monthOfYear + 1, year, 1, 0, 0);
                 String result = UtilLibs.getDateTime(result_milliseconds, "dd/MM/yyyy");
                 DebugLog.loge(result);
                 if (showTimePicker) showTimePicker(context, result, callback);
@@ -143,7 +143,7 @@ public class DateTimeUtils {
         DatePickerDialog datePickerDialog = new DatePickerDialog(context, new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                long result_milliseconds = UtilLibs.parseTimeToMiliseconds(dayOfMonth, monthOfYear + 1, year, 1, 0, 0);
+                long result_milliseconds = UtilLibs.parseTimeToMilliseconds(dayOfMonth, monthOfYear + 1, year, 1, 0, 0);
                 String result = UtilLibs.getDateTime(result_milliseconds, "dd/MM/yyyy");
                 DebugLog.loge(result);
                 if (showTimePicker) showTimePicker(context, result, textView);
@@ -181,7 +181,7 @@ public class DateTimeUtils {
         DatePickerDialog datePickerDialog = new DatePickerDialog(context, new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                long result_milliseconds = UtilLibs.parseTimeToMiliseconds(dayOfMonth, monthOfYear + 1, year, 1, 0, 0);
+                long result_milliseconds = UtilLibs.parseTimeToMilliseconds(dayOfMonth, monthOfYear + 1, year, 1, 0, 0);
                 String result = UtilLibs.getDateTime(result_milliseconds, "dd/MM/yyyy");
                 DebugLog.loge(result);
                 if (callback != null) callback.getResult(convertMillis(result_milliseconds), result);

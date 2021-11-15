@@ -46,7 +46,7 @@ public abstract class JsonCallback<T> implements Callback<T> {
                     } else {
                         gson = response.body().toString();
                     }
-                    DebugLog.logn(gson);
+                    DebugLog.logi(gson);
                     if (gson.length() > 1) {
                         if (gson.substring(0, 1).equals("{")) {
                             onSuccess(response.code(), new JSONObject(gson));
@@ -88,9 +88,9 @@ public abstract class JsonCallback<T> implements Callback<T> {
     }
 
     private void log(Call<T> call, int statusCode) {
-        DebugLog.logn(call.request().method() + " : "+call.request().url().toString() + " [" + statusCode + "]");
+        DebugLog.logi(call.request().method() + " : "+call.request().url().toString() + " [" + statusCode + "]");
         if (call.request().body() != null) {
-            DebugLog.logn("[Request Body] "+bodyToString(call.request().body()));
+            DebugLog.logi("[Request Body] "+bodyToString(call.request().body()));
         }
     }
 

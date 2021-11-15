@@ -294,7 +294,7 @@ public class NetworkService extends ContextWrapper {
     }
 
     public void get(final String url, final HashMap<String, String> headers, String tagRequest, boolean singleRequest, final OnGetResult callback) {
-        DebugLog.logn("url:\n" + url);
+        DebugLog.logi("url:\n" + url);
         if (url.isEmpty()) {
             DebugLog.loge("url empty");
             return;
@@ -302,7 +302,7 @@ public class NetworkService extends ContextWrapper {
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                DebugLog.logn(response);
+                DebugLog.logi(response);
                 callback.result(response);
             }
         }, new Response.ErrorListener() {
@@ -375,8 +375,8 @@ public class NetworkService extends ContextWrapper {
     }
 
     public void post(String url, final String body, final HashMap<String, String> headers, String tagRequest, boolean singleRequest, final OnGetResult callback) {
-        DebugLog.logn("url:\n" + url);
-        DebugLog.logn("body:\n" + body);
+        DebugLog.logi("url:\n" + url);
+        DebugLog.logi("body:\n" + body);
         if (url.isEmpty()) {
             DebugLog.loge("url empty");
             return;
@@ -384,7 +384,7 @@ public class NetworkService extends ContextWrapper {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                DebugLog.logn(response);
+                DebugLog.logi(response);
                 callback.result(response);
             }
         }, new Response.ErrorListener() {
@@ -466,7 +466,7 @@ public class NetworkService extends ContextWrapper {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                DebugLog.logn(response);
+                DebugLog.logi(response);
                 callback.result(response);
             }
         }, new Response.ErrorListener() {
