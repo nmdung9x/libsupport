@@ -14,9 +14,9 @@ import com.nmd.utility.viewbinder.ViewBinder;
 import com.nmd.utility.viewbinder.ViewBindingCreator;
 
 public abstract class BView<T extends ViewBinding> extends FrameLayout {
-    Context context;
-    View viewRoot;
-    T v;
+    public Context context;
+    public View viewRoot;
+    public T v;
 
     public BView(Context context) {
         super(context);
