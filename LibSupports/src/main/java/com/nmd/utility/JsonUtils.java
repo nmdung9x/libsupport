@@ -356,6 +356,6 @@ public class JsonUtils {
         } catch (Exception e) {
             DebugLog.loge(e);
         }
-        return null;
+        return new JSONArray();
     }
 }

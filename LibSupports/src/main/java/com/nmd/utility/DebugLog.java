@@ -196,17 +196,11 @@ public class DebugLog {
 
 		File logFile = UtilityMain.logFile();
 		if (logFile == null) return;
-		boolean isNew = false;
-		if (!logFile.exists()) {
-			try {
-				logFile.createNewFile();
-				isNew = true;
-			} catch (IOException e) {
-				logi("DebugLog", "Can't create log file in AppDataDir");
-				return;
-			}
-		}
 		try {
+			boolean isNew = !logFile.exists();
+			if (isNew) {
+				if (!logFile.createNewFile()) return;
+			}
 			BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true));
 			if (isNew) {
 				buf.append(UtilLibs.getInfoDevices()).append('\n');
@@ -222,7 +216,7 @@ public class DebugLog {
     @SuppressLint("SimpleDateFormat")
 	private static String getCurrentTime(){
     	SimpleDateFormat sdf = new SimpleDateFormat("MMM dd,yyyy HH:mm:ss");
-        Date resultdate = new Date(System.currentTimeMillis());
-		return sdf.format(resultdate);
+        Date result = new Date(System.currentTimeMillis());
+		return sdf.format(result);
     }
 }
