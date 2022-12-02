@@ -22,20 +22,28 @@ public class JsonObj extends JSONObject {
         return jsonObject;
     }
 
-    public Object getObjectInJsonObj(String key) {
+    public Object getObjectByKey(String key) {
         return JsonUtils.getObjectInJsonObj(jsonObject, key);
     }
 
-    public String getStringInJsonObj(String key) {
+    public String getStringByKey(String key) {
         return JsonUtils.getStringInJsonObj(jsonObject, key);
     }
 
-    public JSONObject getJSONObjectFromJSONObject(Object key) {
+    public JsonObj getJsonObjByKey(Object key) {
+        return new JsonObj(JsonUtils.getJSONObjectFromJSONObject(jsonObject, key));
+    }
+
+    public JSONObject getJSONObjectByKey(Object key) {
         return JsonUtils.getJSONObjectFromJSONObject(jsonObject, key);
     }
 
-    public JSONArray getJSONArrayFromJSONObject(Object key) {
+    public JSONArray getJSONArrayByKey(Object key) {
         return JsonUtils.getJSONArrayFromJSONObject(jsonObject, key);
+    }
+
+    public JsonObj putObj(String key, Object value) {
+        return new JsonObj(JsonUtils.putObject(jsonObject, key, value));
     }
 
     public JSONObject putObject(String key, Object value) {

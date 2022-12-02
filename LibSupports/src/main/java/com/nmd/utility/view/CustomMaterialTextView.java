@@ -71,6 +71,8 @@ public class CustomMaterialTextView extends FrameLayout {
             icon = type.getDrawable(R.styleable.CustomMaterialTextView_android_drawable);
             final Drawable iconSelected = type.getDrawable(R.styleable.CustomMaterialTextView_drawableSelected);
             final Drawable iconStart = type.getDrawable(R.styleable.CustomMaterialTextView_drawableStart);
+            final Drawable iconEnd = type.getDrawable(R.styleable.CustomMaterialTextView_drawableEnd);
+            if (iconEnd != null) icon = iconEnd;
 
             int padding = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_textPadding, 0);
             int paddingTop = type.getDimensionPixelSize(R.styleable.CustomMaterialTextView_textPaddingTop, 0);

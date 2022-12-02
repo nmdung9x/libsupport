@@ -1,50 +1,77 @@
 package com.nmd.utility.common;
 
-import com.nmd.utility.DebugLog;
 import com.nmd.utility.JsonUtils;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 
 public class JsonArray extends JSONArray {
+    private final JSONArray jsonArray;
 
-    public ArrayList<Object> getListObjectInJsonArray() {
-        return JsonUtils.getListObjectInJsonArray(this);
+    public JsonArray(JSONArray jsonArray) {
+        this.jsonArray = jsonArray;
     }
 
-    public ArrayList<String> getListStringInJsonArray() {
-        return JsonUtils.getListStringInJsonArray(this);
+    public JsonArray(String content) {
+        this.jsonArray = JsonUtils.parseJsonArray(content);
     }
 
-    public Object getObjectInJsonArray(int i) {
-        return JsonUtils.getObjectInJsonArray(this, i);
+    public JSONArray getJSONArray() {
+        return jsonArray;
     }
 
-    public String getStringInJsonArray(int i) {
-        return JsonUtils.getStringInJsonArray(this, i);
+    public ArrayList<Object> getListObject() {
+        return JsonUtils.getListObjectInJsonArray(jsonArray);
     }
 
-    public String getStringInJsonArray(JSONArray jsonArray, int i, String keyJsonObj) {
-        return JsonUtils.getStringInJsonArray(this, i, keyJsonObj);
+    public ArrayList<String> getListString() {
+        return JsonUtils.getListStringInJsonArray(jsonArray);
     }
 
-    public JSONArray JSONArrayRemove(int pos) {
-        return JsonUtils.JSONArrayRemove(this, pos);
+    public Object getObject(int i) {
+        return JsonUtils.getObjectInJsonArray(jsonArray, i);
     }
 
-    public ArrayList<JSONObject> parseJSONArrayToArrayListJSON() {
-        return JsonUtils.parseJSONArrayToArrayListJSON(this);
+    public String getString(int i) {
+        return JsonUtils.getStringInJsonArray(jsonArray, i);
     }
 
-    public JSONObject getJSONObjectFromJSONArray(int pos) {
-        return JsonUtils.getJSONObjectFromJSONArray(this, pos);
+    public String getString(int i, String keyJsonObj) {
+        return JsonUtils.getStringInJsonArray(jsonArray, i, keyJsonObj);
     }
 
-    public JSONArray addAll(JSONArray jsonArray2) {
-        return JsonUtils.addAll(this, jsonArray2);
+    public JsonArray remove(int pos) {
+        return new JsonArray(JsonUtils.JSONArrayRemove(jsonArray, pos));
+    }
+
+    public JSONArray removeItem(int pos) {
+        return JsonUtils.JSONArrayRemove(jsonArray, pos);
+    }
+
+    public ArrayList<JSONObject> parseToArrayListJSON() {
+        return JsonUtils.parseJSONArrayToArrayListJSON(jsonArray);
+    }
+
+    public JsonObj getJsonObj(int pos) {
+        return new JsonObj(JsonUtils.getJSONObjectFromJSONArray(jsonArray, pos));
+    }
+
+    public JSONObject getJSONObject(int pos) {
+        return JsonUtils.getJSONObjectFromJSONArray(jsonArray, pos);
+    }
+
+    public JsonArray addAll(JSONArray jsonArray2) {
+        return new JsonArray(JsonUtils.addAll(jsonArray, jsonArray2));
+    }
+
+    public JsonArray addAll(JsonArray jsonArray2) {
+        return new JsonArray(JsonUtils.addAll(jsonArray, jsonArray2));
+    }
+
+    public JSONArray addAllArray(JSONArray jsonArray2) {
+        return JsonUtils.addAll(jsonArray, jsonArray2);
     }
 
 }

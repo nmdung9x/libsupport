@@ -4,6 +4,7 @@
         <attr name="actionSelect" format="boolean" />
         <attr name="drawableSelected" format="integer" />
         <attr name="drawableStart" format="integer" />
+        <attr name="drawableEnd" format="integer" />
         <attr name="textPadding" format="dimension" />
         <attr name="textPaddingTop" format="dimension" />
         <attr name="textPaddingBottom" format="dimension" />
