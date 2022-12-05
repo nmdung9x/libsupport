@@ -8,70 +8,82 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class JsonArray extends JSONArray {
-    private final JSONArray jsonArray;
 
+    public JsonArray() {
+    }
+    
     public JsonArray(JSONArray jsonArray) {
-        this.jsonArray = jsonArray;
+        try {
+            if (jsonArray == null) return;
+            if (jsonArray.length() > 0) {
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    put(jsonArray.get(i));
+                }
+            }
+        } catch (Exception ignored) { }
     }
 
     public JsonArray(String content) {
-        this.jsonArray = JsonUtils.parseJsonArray(content);
-    }
-
-    public JSONArray getJSONArray() {
-        return jsonArray;
+        JSONArray jsonArray = JsonUtils.parseJsonArray(content);
+        try {
+            if (jsonArray.length() > 0) {
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    put(jsonArray.get(i));
+                }
+            }
+        } catch (Exception ignored) { }
     }
 
     public ArrayList<Object> getListObject() {
-        return JsonUtils.getListObjectInJsonArray(jsonArray);
+        return JsonUtils.getListObjectInJsonArray(this);
     }
 
     public ArrayList<String> getListString() {
-        return JsonUtils.getListStringInJsonArray(jsonArray);
+        return JsonUtils.getListStringInJsonArray(this);
     }
 
     public Object getObject(int i) {
-        return JsonUtils.getObjectInJsonArray(jsonArray, i);
+        return JsonUtils.getObjectInJsonArray(this, i);
     }
 
     public String getString(int i) {
-        return JsonUtils.getStringInJsonArray(jsonArray, i);
+        return JsonUtils.getStringInJsonArray(this, i);
     }
 
     public String getString(int i, String keyJsonObj) {
-        return JsonUtils.getStringInJsonArray(jsonArray, i, keyJsonObj);
+        return JsonUtils.getStringInJsonArray(this, i, keyJsonObj);
     }
 
     public JsonArray remove(int pos) {
-        return new JsonArray(JsonUtils.JSONArrayRemove(jsonArray, pos));
+        return new JsonArray(JsonUtils.JSONArrayRemove(this, pos));
     }
 
     public JSONArray removeItem(int pos) {
-        return JsonUtils.JSONArrayRemove(jsonArray, pos);
+        return JsonUtils.JSONArrayRemove(this, pos);
     }
 
     public ArrayList<JSONObject> parseToArrayListJSON() {
-        return JsonUtils.parseJSONArrayToArrayListJSON(jsonArray);
+        return JsonUtils.parseJSONArrayToArrayListJSON(this);
     }
 
     public JsonObj getJsonObj(int pos) {
-        return new JsonObj(JsonUtils.getJSONObjectFromJSONArray(jsonArray, pos));
+        return new JsonObj(JsonUtils.getJSONObjectFromJSONArray(this, pos));
     }
 
     public JSONObject getJSONObject(int pos) {
-        return JsonUtils.getJSONObjectFromJSONArray(jsonArray, pos);
+        return JsonUtils.getJSONObjectFromJSONArray(this, pos);
     }
 
-    public JsonArray addAll(JSONArray jsonArray2) {
-        return new JsonArray(JsonUtils.addAll(jsonArray, jsonArray2));
+    public JsonArray addAll(JSONArray this2) {
+        return new JsonArray(JsonUtils.addAll(this, this2));
     }
 
-    public JsonArray addAll(JsonArray jsonArray2) {
-        return new JsonArray(JsonUtils.addAll(jsonArray, jsonArray2));
+    public JsonArray addAll(JsonArray this2) {
+        return new JsonArray(JsonUtils.addAll(this, this2));
     }
 
-    public JSONArray addAllArray(JSONArray jsonArray2) {
-        return JsonUtils.addAll(jsonArray, jsonArray2);
+    public JSONArray addAllArray(JSONArray this2) {
+        return JsonUtils.addAll(this, this2);
     }
 
 }

@@ -6,55 +6,69 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class JsonObj extends JSONObject {
-    private final JSONObject jsonObject;
+
+    public JsonObj() {
+    }
 
     public JsonObj(JSONObject jsonObject) {
-        this.jsonObject = jsonObject;
+        if (jsonObject == null) return;
+        Iterator<String> keys = jsonObject.keys();
+        while(keys.hasNext()) {
+            try {
+                String key = keys.next();
+                put(key, jsonObject.get(key));
+            } catch (Exception ignored) {  }
+        }
     }
 
     public JsonObj(String content) {
-        this.jsonObject = JsonUtils.parseJsonObject(content);
-    }
-
-    public JSONObject getJsonObject() {
-        return jsonObject;
+        JSONObject jsonObject = JsonUtils.parseJsonObject(content);
+        if (jsonObject == null) return;
+        Iterator<String> keys = jsonObject.keys();
+        while(keys.hasNext()) {
+            try {
+                String key = keys.next();
+                put(key, jsonObject.get(key));
+            } catch (Exception ignored) { }
+        }
     }
 
     public Object getObjectByKey(String key) {
-        return JsonUtils.getObjectInJsonObj(jsonObject, key);
+        return JsonUtils.getObjectInJsonObj(this, key);
     }
 
     public String getStringByKey(String key) {
-        return JsonUtils.getStringInJsonObj(jsonObject, key);
+        return JsonUtils.getStringInJsonObj(this, key);
     }
 
     public JsonObj getJsonObjByKey(Object key) {
-        return new JsonObj(JsonUtils.getJSONObjectFromJSONObject(jsonObject, key));
+        return new JsonObj(JsonUtils.getJSONObjectFromJSONObject(this, key));
     }
 
     public JSONObject getJSONObjectByKey(Object key) {
-        return JsonUtils.getJSONObjectFromJSONObject(jsonObject, key);
+        return JsonUtils.getJSONObjectFromJSONObject(this, key);
     }
 
     public JSONArray getJSONArrayByKey(Object key) {
-        return JsonUtils.getJSONArrayFromJSONObject(jsonObject, key);
+        return JsonUtils.getJSONArrayFromJSONObject(this, key);
     }
 
     public JsonObj putObj(String key, Object value) {
-        return new JsonObj(JsonUtils.putObject(jsonObject, key, value));
+        return new JsonObj(JsonUtils.putObject(this, key, value));
     }
 
     public JSONObject putObject(String key, Object value) {
-        return JsonUtils.putObject(jsonObject, key, value);
+        return JsonUtils.putObject(this, key, value);
     }
 
     public String parseJsonToQuery() {
-        return JsonUtils.parseJsonToQuery(jsonObject);
+        return JsonUtils.parseJsonToQuery(this);
     }
 
     public ArrayList<String> getListKeyInJson() {
-        return JsonUtils.getListKeyInJson(jsonObject);
+        return JsonUtils.getListKeyInJson(this);
     }
 }
