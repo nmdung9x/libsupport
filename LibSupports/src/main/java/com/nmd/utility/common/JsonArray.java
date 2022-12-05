@@ -42,19 +42,19 @@ public class JsonArray extends JSONArray {
         return JsonUtils.getListStringInJsonArray(this);
     }
 
-    public Object getObject(int i) {
+    public Object getObj(int i) {
         return JsonUtils.getObjectInJsonArray(this, i);
     }
 
-    public String getString(int i) {
+    public String getStr(int i) {
         return JsonUtils.getStringInJsonArray(this, i);
     }
 
-    public String getString(int i, String keyJsonObj) {
+    public String getStr(int i, String keyJsonObj) {
         return JsonUtils.getStringInJsonArray(this, i, keyJsonObj);
     }
 
-    public JsonArray remove(int pos) {
+    public JsonArray removeAt(int pos) {
         return new JsonArray(JsonUtils.JSONArrayRemove(this, pos));
     }
 
@@ -70,7 +70,7 @@ public class JsonArray extends JSONArray {
         return new JsonObj(JsonUtils.getJSONObjectFromJSONArray(this, pos));
     }
 
-    public JSONObject getJSONObject(int pos) {
+    public JSONObject getJSONObj(int pos) {
         return JsonUtils.getJSONObjectFromJSONArray(this, pos);
     }
 

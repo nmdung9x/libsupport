@@ -52,6 +52,10 @@ public class JsonObj extends JSONObject {
         return JsonUtils.getJSONObjectFromJSONObject(this, key);
     }
 
+    public JsonArray getJsonArrayByKey(Object key) {
+        return new JsonArray(JsonUtils.getJSONArrayFromJSONObject(this, key));
+    }
+
     public JSONArray getJSONArrayByKey(Object key) {
         return JsonUtils.getJSONArrayFromJSONObject(this, key);
     }
