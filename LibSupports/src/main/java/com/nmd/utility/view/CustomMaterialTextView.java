@@ -120,6 +120,7 @@ public class CustomMaterialTextView extends FrameLayout {
                 if (gravity != Gravity.NO_GRAVITY && type.hasValue(R.styleable.CustomMaterialTextView_android_gravity)) editText.setGravity(gravity);
 
                 if (icon != null) {
+                    layout.setEndIconMode(END_ICON_CUSTOM);
                     layout.setEndIconDrawable(icon);
                     layout.setEndIconMode(END_ICON_CUSTOM);
                 }

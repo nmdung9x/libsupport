@@ -10,8 +10,8 @@ android {
         minSdkVersion 16
         targetSdkVersion 30
 
-        versionCode 21
-        versionName "3.4.6"
+        versionCode 22
+        versionName "3.4.7"
     }
 
     buildFeatures {
