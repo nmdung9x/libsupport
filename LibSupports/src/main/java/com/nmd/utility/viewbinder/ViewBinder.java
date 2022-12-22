@@ -8,8 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.nmd.utility.view.ViewClickAnimation;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * Created by QuangPH on 6/15/2016.
@@ -28,6 +31,10 @@ public class ViewBinder {
                 setFieldValue(field, obj, finder);
             }
         }
+        Method[] methods = obj.getClass().getMethods();
+        for (Method method : methods) {
+            createOnClickListener(obj, method, finder);
+        }
     }
 
     public static void bind(Activity activity) {
@@ -37,6 +44,10 @@ public class ViewBinder {
             if (View.class.isAssignableFrom(field.getType())) {
                 setFieldValue(field, activity, finder);
             }
+        }
+        Method[] methods = activity.getClass().getMethods();
+        for (Method method : methods) {
+            createOnClickListener(activity, method, finder);
         }
     }
 
@@ -51,6 +62,10 @@ public class ViewBinder {
             if (View.class.isAssignableFrom(field.getType())) {
                 setFieldValue(field, obj, finder);
             }
+        }
+        Method[] methods = obj.getClass().getMethods();
+        for (Method method : methods) {
+            createOnClickListener(obj, method, finder);
         }
     }
 
@@ -84,6 +99,10 @@ public class ViewBinder {
             if (View.class.isAssignableFrom(field.getType())) {
                 setFieldValue(field, view, finder);
             }
+        }
+        Method[] methods = parentView.getMethods();
+        for (Method method : methods) {
+            createOnClickListener(view, method, finder);
         }
     }
 
@@ -125,28 +144,58 @@ public class ViewBinder {
         try {
             switch (attrs.type()) {
                 case Attrs.DIMENSION:
-                    field.setFloat(v, a.getDimension(attrs.index(), Float.valueOf(attrs.defVal())));
+                    field.setFloat(v, a.getDimension(attrs.index(), Float.parseFloat(attrs.defVal())));
                     break;
                 case Attrs.COLOR:
                     field.setInt(v, a.getColor(attrs.index(), Color.parseColor(attrs.defVal())));
                     break;
                 case Attrs.INTEGER:
-                    field.setInt(v, a.getInt(attrs.index(),
-                            Integer.valueOf(attrs.defVal())));
+                    field.setInt(v, a.getInt(attrs.index(), Integer.parseInt(attrs.defVal())));
                     break;
                 case Attrs.FLOAT:
-                    field.setFloat(v, a.getFloat(attrs.index(),
-                            Float.valueOf(attrs.defVal())));
+                    field.setFloat(v, a.getFloat(attrs.index(), Float.parseFloat(attrs.defVal())));
                     break;
                 case Attrs.BOOLEAN:
-                    field.setBoolean(v, a.getBoolean(attrs.index(),
-                            Boolean.valueOf(attrs.defVal())));
+                    field.setBoolean(v, a.getBoolean(attrs.index(), Boolean.parseBoolean(attrs.defVal())));
                     break;
             }
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void createOnClickListener(final Object obj, Method method, ViewFinder finder){
+        OnClick onClick = method.getAnnotation(OnClick.class);
+        if(onClick != null){
+            View view = finder.findViewById(onClick.value());
+            if (view == null) return;
+            view.setOnClickListener(v -> {
+                try {
+                    method.setAccessible(true);
+                    method.invoke(obj);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        OnClickAnimation onClickAnimation = method.getAnnotation(OnClickAnimation.class);
+        if(onClickAnimation != null){
+            View view = finder.findViewById(onClickAnimation.value());
+            if (view == null) return;
+            view.setOnClickListener(new ViewClickAnimation() {
+                @Override
+                public void onClickAnimationListener(View view) {
+                    try {
+                        method.setAccessible(true);
+                        method.invoke(obj);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         }
     }
 
