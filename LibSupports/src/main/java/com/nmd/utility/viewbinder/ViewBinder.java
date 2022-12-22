@@ -31,7 +31,7 @@ public class ViewBinder {
                 setFieldValue(field, obj, finder);
             }
         }
-        Method[] methods = obj.getClass().getMethods();
+        Method[] methods = obj.getClass().getDeclaredMethods();
         for (Method method : methods) {
             createOnClickListener(obj, method, finder);
         }
@@ -45,7 +45,7 @@ public class ViewBinder {
                 setFieldValue(field, activity, finder);
             }
         }
-        Method[] methods = activity.getClass().getMethods();
+        Method[] methods = activity.getClass().getDeclaredMethods();
         for (Method method : methods) {
             createOnClickListener(activity, method, finder);
         }
@@ -63,7 +63,7 @@ public class ViewBinder {
                 setFieldValue(field, obj, finder);
             }
         }
-        Method[] methods = obj.getClass().getMethods();
+        Method[] methods = obj.getClass().getDeclaredMethods();
         for (Method method : methods) {
             createOnClickListener(obj, method, finder);
         }
@@ -100,7 +100,7 @@ public class ViewBinder {
                 setFieldValue(field, view, finder);
             }
         }
-        Method[] methods = parentView.getMethods();
+        Method[] methods = parentView.getDeclaredMethods();
         for (Method method : methods) {
             createOnClickListener(view, method, finder);
         }
