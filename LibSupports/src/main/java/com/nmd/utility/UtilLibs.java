@@ -556,25 +556,13 @@ public class UtilLibs {
 		}
 	}
 
+	public static void showKeyboard(Context context) {
+		showKeyboard((Activity) context);
+	}
+
 	public static void showKeyboardEditText(Context context, EditText editText) {
 		InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
 		imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
-	}
-
-	public static void hideKeyboard(Context context, View view) {
-		try {
-			if (view != null) {
-				Activity activity = (Activity) context;
-				InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-				imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-			}
-		} catch (Exception e) {
-			DebugLog.loge(e);
-		}
-	}
-
-	public static void showKeyboard(Context context) {
-		showKeyboard((Activity) context);
 	}
 
 	public static void showKeyboard(Activity activity) {
@@ -597,25 +585,20 @@ public class UtilLibs {
 		if (requestFocus) viewFocus.requestFocus();
 	}
 
-	/**
-	 * Request to hide the soft input window from the context of the window that
-	 * is currently accepting input.
-	 *
-	 * @param context
-	 *            The context to use. Usually your Application or Activity
-	 *            object.
-	 * @param view
-	 *            must be EditText
-	 * 
-	 */
+	public static void hideKeyboard(Activity activity) {
+		View view = activity.findViewById(android.R.id.content);
+		hideKeyboard(activity, view);
+	}
 
-	public static void hideSoftwareKeyboard(Context context, View view) {
-		if (view != null) {
-			try {
-				InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+	public static void hideKeyboard(Context context, View view) {
+		try {
+			if (view != null) {
+				Activity activity = (Activity) context;
+				InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-			} catch (Exception ignored) {
 			}
+		} catch (Exception e) {
+			DebugLog.loge(e);
 		}
 	}
 
