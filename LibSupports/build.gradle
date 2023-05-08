@@ -5,13 +5,12 @@ group='com.github.nmdung9x'
 
 android {
     compileSdkVersion 31
-    buildToolsVersion "31.0.0"
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 31
 
         versionCode 25
-        versionName "3.5.1"
+        versionName "3.5.2"
     }
 
     buildFeatures {

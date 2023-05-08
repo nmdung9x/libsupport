@@ -37,24 +37,6 @@ public class ViewBinder {
      * @param v
      * @param obj contain v
      */
-    public static void bind(View v, Object obj) {
-        Field[] fields = obj.getClass().getDeclaredFields();
-        ViewFinder finder = new ViewFinder.ByView(v);
-        for (Field field : fields) {
-            if (View.class.isAssignableFrom(field.getType())) {
-                setFieldValue(field, obj, finder);
-            }
-        }
-        Method[] methods = obj.getClass().getDeclaredMethods();
-        for (Method method : methods) {
-            createOnClickListener(obj, method, finder);
-        }
-    }
-
-    /**
-     * @param v
-     * @param obj contain v
-     */
     public static void bind(Object obj, View v) {
         Field[] fields = obj.getClass().getDeclaredFields();
         ViewFinder finder = new ViewFinder.ByView(v);

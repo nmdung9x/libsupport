@@ -52,7 +52,7 @@ public abstract class BView<T extends ViewBinding> extends FrameLayout {
 
         if (viewRoot != null) {
             addView(viewRoot);
-            ViewBinder.bind(viewRoot, this);
+            ViewBinder.bind(this, viewRoot);
         } else return;
 
         setOnClickListener(v -> DebugLog.loge("_"));
