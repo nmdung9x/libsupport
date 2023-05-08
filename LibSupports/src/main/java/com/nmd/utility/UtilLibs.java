@@ -45,6 +45,7 @@ import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
@@ -130,10 +131,6 @@ public class UtilLibs {
 		return false;
 	}
 
-	public static boolean isTablet() {
-		return (Resources.getSystem().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;
-	}
-
 	@SuppressLint("PackageManagerGetSignatures")
 	public static String getSignatures(Context context, String algorithm, boolean showColon) {
 		try {
@@ -192,7 +189,7 @@ public class UtilLibs {
 		return sdf.format(value);
 	}
 
-	public static long parseTimeToMilis(String value, String dateFormat) {
+	public static long parseTimeToMillis(String value, String dateFormat) {
 		try {
 			DateFormat format = new SimpleDateFormat(dateFormat, Locale.US);
 			Date date = format.parse(value);
@@ -438,6 +435,30 @@ public class UtilLibs {
 		return toast;
 	}
 
+	public static View showToastNew(Activity activity, String message) {
+		if (activity != null) {
+			ViewGroup root = activity.findViewById(android.R.id.content);
+			View viewContent = LayoutInflater.from(activity).inflate(R.layout.view_new_toast, null);
+			root.addView(viewContent);
+			((TextView) viewContent.findViewById(R.id.tvContent)).setText(message);
+			viewContent.bringToFront();
+			new Handler().postDelayed(() -> viewContent.animate()
+					.alpha(0)
+					.setDuration(300)
+					.setInterpolator(new DecelerateInterpolator())
+					.withEndAction(() -> {
+						try {
+							viewContent.setVisibility(View.GONE);
+							root.removeView(viewContent);
+						} catch (Exception e) {
+							DebugLog.loge(e);
+						}
+					}), 1200);
+			return viewContent;
+		} else DebugLog.loge("activity == null");
+		return null;
+	}
+
 	/**
 	 * Check Input string is Null or Empty
 	 *
@@ -451,12 +472,9 @@ public class UtilLibs {
 			if (inputString.isEmpty()) {
 				return true;
 			} else {
-				if (inputString.equals("null")) {
-					return true;
-				}
+				return inputString.equals("null");
 			}
 		}
-		return false;
 	}
 
 	/**
@@ -505,7 +523,7 @@ public class UtilLibs {
 			final TextView view = (TextView) obj;
 			view.setError(Html.fromHtml("<font color='black'>" + errorMessage + "!</font>"));
 			view.setOnFocusChangeListener((arg0, arg1) -> {
-				if (view == null || view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
+				if (view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
 					view.setError(Html.fromHtml("<font color='black'>" + errorMessage + "!</font>"));
 				} else {
 					view.setError(null);
@@ -515,7 +533,7 @@ public class UtilLibs {
 			final EditText view = (EditText) obj;
 			view.setError(Html.fromHtml("<font color='black'>" + errorMessage + "!</font>"));
 			view.setOnFocusChangeListener((arg0, arg1) -> {
-				if (view == null || view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
+				if (view.getText().toString().isEmpty() || view.getText().toString().equals("")) {
 					view.setError(Html.fromHtml("<font color='black'>" + errorMessage + "!</font>"));
 				} else {
 					view.setError(null);
@@ -543,16 +561,15 @@ public class UtilLibs {
 		imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
 	}
 
-	public static void hideKeyboard(Activity activity) {
-		View view = activity.findViewById(android.R.id.content);
-		if (view != null) {
-			try {
+	public static void hideKeyboard(Context context, View view) {
+		try {
+			if (view != null) {
+				Activity activity = (Activity) context;
 				InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-			} catch (Exception e) {
-				DebugLog.loge(e);
 			}
-
+		} catch (Exception e) {
+			DebugLog.loge(e);
 		}
 	}
 
@@ -614,15 +631,11 @@ public class UtilLibs {
 	 * 
 	 */
 	public static void removeFocusAndHideKeyboard(final Context context, final EditText editText) {
-		editText.setOnFocusChangeListener(new OnFocusChangeListener() {
-
-			@Override
-			public void onFocusChange(View v, boolean hasFocus) {
-				if (hasFocus) {
-					InputMethodManager inputMgr = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-					inputMgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-					inputMgr.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
-				}
+		editText.setOnFocusChangeListener((v, hasFocus) -> {
+			if (hasFocus) {
+				InputMethodManager inputMgr = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+				inputMgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+				inputMgr.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
 			}
 		});
 		editText.requestFocus();
@@ -928,11 +941,11 @@ public class UtilLibs {
 		StringBuilder buf = new StringBuilder();
 		for (byte b : data) {
 			int halfbyte = (b >>> 4) & 0x0F;
-			int two_halfs = 0;
+			int two_half = 0;
 			do {
 				buf.append(halfbyte <= 9 ? (char) ('0' + halfbyte) : (char) ('a' + halfbyte - 10));
 				halfbyte = b & 0x0F;
-			} while (two_halfs++ < 1);
+			} while (two_half++ < 1);
 		}
 		return buf.toString();
 	}
@@ -1694,8 +1707,7 @@ public class UtilLibs {
 			// DebugLog.logd("---->Done");
 
 		} catch (Exception e) {
-			if (e != null)
-				DebugLog.loge(e.getMessage());
+			DebugLog.loge(e);
 		}
 	}
 
@@ -1797,13 +1809,7 @@ public class UtilLibs {
 		if (r1 != null) {
 			h1.removeCallbacks(r1);
 		}
-		r1 = new Runnable() {
-
-			@Override
-			public void run() {
-				animate(view).scaleX(1).scaleY(1).setDuration(duration2);
-			}
-		};
+		r1 = () -> animate(view).scaleX(1).scaleY(1).setDuration(duration2);
 		h1.postDelayed(r1, duration1);
 	}
 
@@ -2105,12 +2111,18 @@ public class UtilLibs {
 		Uri uri = Uri.parse("market://details?id=" + packageName);
 		Intent myAppLinkToMarket = new Intent(Intent.ACTION_VIEW);
 		myAppLinkToMarket.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		myAppLinkToMarket.setPackage("com.android.vending");
 		myAppLinkToMarket.setData(uri);
 		try {
 			context.startActivity(myAppLinkToMarket);
 		} catch (Exception e) {
+			DebugLog.loge(e);
 			myAppLinkToMarket.setData(Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
-			context.startActivity(myAppLinkToMarket);
+			try {
+				context.startActivity(myAppLinkToMarket);
+			} catch (Exception e2) {
+				DebugLog.loge(e2);
+			}
 		}
 	}
 
@@ -2353,5 +2365,16 @@ public class UtilLibs {
 		new Handler().postDelayed(() -> {
 			if (callback != null) callback.onComplete();
 		}, duration * 2);
+	}
+
+	public static boolean isTablet() {
+		return (Resources.getSystem().getConfiguration().screenLayout
+				& Configuration.SCREENLAYOUT_SIZE_MASK)
+				>= Configuration.SCREENLAYOUT_SIZE_LARGE;
+	}
+	public static boolean isLandscape(Context context) {
+		int orientation = context.getResources().getConfiguration().orientation;
+//        DebugLog.loge(orientation == Configuration.ORIENTATION_LANDSCAPE ? "YES" : "NO");
+		return orientation == Configuration.ORIENTATION_LANDSCAPE;
 	}
 }

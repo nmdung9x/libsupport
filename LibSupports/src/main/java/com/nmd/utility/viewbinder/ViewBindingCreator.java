@@ -34,7 +34,7 @@ public class ViewBindingCreator {
                 return (Binding) method.invoke(null, inflater, root, attachToRoot);
             }
         } catch (Exception e) {
-            DebugLog.loge("Binding class not found! Ignored.");
+            DebugLog.logw("Binding class not found! Ignored..");
         }
         
         return null;

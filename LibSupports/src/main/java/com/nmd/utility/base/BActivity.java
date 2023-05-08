@@ -62,8 +62,20 @@ public abstract class BActivity<T extends ViewBinding> extends AppCompatActivity
         return "";
     }
 
+    public void startActivity(Intent intent, boolean finish) {
+        startActivity(intent);
+        if (finish) finish();
+    }
+
     public void startActivity(Class<?> cls, boolean finish) {
         startActivity(new Intent(context, cls));
+        if (finish) finish();
+    }
+
+    public void startActivity(Class<?> cls, Bundle bundle, boolean finish) {
+        Intent intent = new Intent(context, cls);
+        intent.putExtras(bundle);
+        startActivity(intent);
         if (finish) finish();
     }
 

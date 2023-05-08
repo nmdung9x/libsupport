@@ -19,6 +19,20 @@ import java.lang.reflect.Method;
  */
 public class ViewBinder {
 
+    public static void bind(Activity activity) {
+        Field[] fields = activity.getClass().getDeclaredFields();
+        ViewFinder finder = new ViewFinder.ByActivity(activity);
+        for (Field field : fields) {
+            if (View.class.isAssignableFrom(field.getType())) {
+                setFieldValue(field, activity, finder);
+            }
+        }
+        Method[] methods = activity.getClass().getDeclaredMethods();
+        for (Method method : methods) {
+            createOnClickListener(activity, method, finder);
+        }
+    }
+
     /**
      * @param v
      * @param obj contain v
@@ -37,22 +51,22 @@ public class ViewBinder {
         }
     }
 
-    public static void bind(Activity activity) {
-        Field[] fields = activity.getClass().getDeclaredFields();
-        ViewFinder finder = new ViewFinder.ByActivity(activity);
+    /**
+     * @param v
+     * @param obj contain v
+     */
+    public static void bind(Object obj, View v) {
+        Field[] fields = obj.getClass().getDeclaredFields();
+        ViewFinder finder = new ViewFinder.ByView(v);
         for (Field field : fields) {
             if (View.class.isAssignableFrom(field.getType())) {
-                setFieldValue(field, activity, finder);
+                setFieldValue(field, obj, finder);
             }
         }
-        Method[] methods = activity.getClass().getDeclaredMethods();
+        Method[] methods = obj.getClass().getDeclaredMethods();
         for (Method method : methods) {
-            createOnClickListener(activity, method, finder);
+            createOnClickListener(obj, method, finder);
         }
-    }
-
-    public static void bind(View view) {
-        bind(view, view);
     }
 
     public static void bind(Activity activity, Object obj) {
