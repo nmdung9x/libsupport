@@ -106,7 +106,7 @@ public class JsonUtils {
                 }
             }
         } catch (Exception e) {
-            DebugLog.loge(e);
+            DebugLog.logi(e);
         }
         return arr;
     }
@@ -125,7 +125,7 @@ public class JsonUtils {
                 }
             }
         } catch (Exception e) {
-            DebugLog.loge(e);
+            DebugLog.logi(e);
         }
         return builder.toString();
     }
@@ -138,7 +138,7 @@ public class JsonUtils {
                     try {
                         result.put(ja.getJSONObject(i));
                     } catch (JSONException e) {
-                        DebugLog.loge(e);
+                        DebugLog.logi(e);
                     }
                 }
             }
@@ -152,7 +152,7 @@ public class JsonUtils {
         try {
             return obj.has(String.valueOf(key)) ? obj.getJSONObject(String.valueOf(key)) : null;
         } catch (Exception e) {
-            DebugLog.loge(e);
+            DebugLog.logi(e);
         }
         return null;
     }
@@ -179,7 +179,7 @@ public class JsonUtils {
                 return results;
             }
         } catch (Exception e) {
-            DebugLog.loge(e);
+            DebugLog.logi(e);
         }
         return new ArrayList<>();
     }
@@ -254,7 +254,7 @@ public class JsonUtils {
                 }
             }
         } catch (Exception e) {
-            DebugLog.loge(e);
+            DebugLog.logi(e);
         }
         return object;
     }
@@ -274,7 +274,7 @@ public class JsonUtils {
                 result.append(getStringInJsonObj(jsonObject, key));
             }
         } catch (Exception e) {
-            DebugLog.loge(e);
+            DebugLog.logi(e);
         }
         return result.toString();
     }
@@ -345,7 +345,7 @@ public class JsonUtils {
         try {
             return new JSONObject(data);
         } catch (Exception e) {
-            DebugLog.loge(e);
+            DebugLog.logi(e);
         }
         return null;
     }
@@ -354,8 +354,34 @@ public class JsonUtils {
         try {
             return new JSONArray(data);
         } catch (Exception e) {
-            DebugLog.loge(e);
+            DebugLog.logi(e);
         }
         return new JSONArray();
+    }
+
+    public static JSONObject buildJson(String regex, Object ... args) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            for (Object arg : args) {
+                String tmp = String.valueOf(arg);
+                if (tmp.contains(regex)) {
+                    String[] split = tmp.split(regex);
+                    jsonObject.put(split[0], split[1]);
+                }
+            }
+        } catch (Exception e) { DebugLog.logi(e); }
+        return jsonObject;
+    }
+
+    public static JSONObject buildJson2(Object ... args) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            String key = "";
+            for (int i = 0; i < args.length; i++) {
+                if (i%2 == 0) key = String.valueOf(args[i]);
+                else jsonObject.put(key, String.valueOf(args[i]));
+            }
+        } catch (Exception e) { DebugLog.logi(e); }
+        return jsonObject;
     }
 }
